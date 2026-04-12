@@ -163,6 +163,7 @@ To transform navigation systems into **health-aware intelligent platforms** that
 * Sarayu
 * Gaurav
 * Harshini
+* Mentored by: Dr. Anurag Srivatsav
 
 ---
 
