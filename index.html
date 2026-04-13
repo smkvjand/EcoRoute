@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EcoRoute — Smart Environmental Navigation</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+:root {
+  --primary: #0F2E1B;
+  --primary-light: #1a4a2a;
+  --on-primary: #FFFFFF;
+  --background: #F0F4F0;
+  --surface: #F8FAF8;
+  --surface-card: rgba(255,255,255,0.72);
+  --on-surface: #191C1B;
+  --on-surface-muted: rgba(15,46,27,0.55);
+  --primary-container: #C8EBCE;
+  --on-primary-container: #00210E;
+  --accent-green: #2D7A4F;
+  --accent-amber: #D4860A;
+  --accent-red: #C0392B;
+  --safe: #27AE60;
+  --moderate: #F39C12;
+  --hazard: #E74C3C;
+  --glass: rgba(248,250,248,0.68);
+  --glass-border: rgba(255,255,255,0.5);
+  --shadow: 0 4px 24px rgba(15,46,27,0.08), 0 1px 4px rgba(15,46,27,0.04);
+  --shadow-lg: 0 8px 40px rgba(15,46,27,0.12), 0 2px 8px rgba(15,46,27,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--background);
+  color: var(--on-surface);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── LAYOUT ── */
+.app-shell {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: 64px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  grid-column: 1 / -1;
+  background: rgba(248,250,248,0.9);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(15,46,27,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 100;
+  box-shadow: 0 1px 12px rgba(15,46,27,0.06);
+}
+
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 36px; height: 36px; background: var(--primary);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+}
+.logo-icon .material-symbols-outlined { color: #fff; font-size: 20px; }
+.logo h1 { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: -0.03em; }
+
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-card);
+  border: 1px solid rgba(15,46,27,0.1);
+  border-radius: 999px;
+  padding: 8px 18px;
+  width: 340px;
+  backdrop-filter: blur(12px);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.search-bar:focus-within { box-shadow: 0 0 0 3px rgba(15,46,27,0.12); border-color: rgba(15,46,27,0.2); }
+.search-bar input {
+  border: none; background: transparent; font-family: 'Manrope', sans-serif;
+  font-size: 0.875rem; color: var(--on-surface); outline: none; flex: 1;
+}
+.search-bar input::placeholder { color: var(--on-surface-muted); }
+.search-bar .material-symbols-outlined { color: var(--on-surface-muted); font-size: 18px; }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--primary); transition: background 0.15s;
+}
+.icon-btn:hover { background: rgba(15,46,27,0.07); }
+.icon-btn .material-symbols-outlined { font-size: 20px; }
+
+.alert-badge {
+  width: 36px; height: 36px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.alert-badge::after {
+  content: '2'; position: absolute; top: 2px; right: 2px;
+  width: 16px; height: 16px; background: var(--accent-red);
+  border-radius: 50%; font-size: 9px; font-weight: 800; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid rgba(15,46,27,0.07);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(15,46,27,0.08);
+}
+.sidebar-tab {
+  flex: 1; padding: 14px 8px; border: none; background: transparent;
+  font-family: 'Manrope', sans-serif; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--on-surface-muted);
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.sidebar-tab .material-symbols-outlined { font-size: 20px; }
+.sidebar-tab.active { color: var(--primary); background: rgba(15,46,27,0.04); }
+.sidebar-tab.active::after {
+  content: ''; display: block; height: 2px; background: var(--primary);
+  border-radius: 2px; width: 100%; margin-top: 2px; position: absolute; bottom: 0; left: 0;
+}
+.sidebar-tab { position: relative; }
+
+.sidebar-content { flex: 1; overflow-y: auto; padding: 20px 16px; }
+.sidebar-content::-webkit-scrollbar { width: 4px; }
+.sidebar-content::-webkit-scrollbar-thumb { background: rgba(15,46,27,0.15); border-radius: 4px; }
+
+.tab-panel { display: none; flex-direction: column; gap: 16px; }
+.tab-panel.active { display: flex; }
+
+/* ── SECTION LABELS ── */
+.section-label {
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--on-surface-muted); padding: 4px 0 2px;
+}
+
+/* ── ECO SCORE RING ── */
+.eco-score-card {
+  background: var(--primary);
+  border-radius: 20px;
+  padding: 20px;
+  color: #fff;
+  display: flex; align-items: center; gap: 16px;
+}
+.score-ring-wrap { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+.score-ring-wrap svg { transform: rotate(-90deg); }
+.score-ring-bg { stroke: rgba(255,255,255,0.15); }
+.score-ring-fill { stroke: #7FFFA0; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+.score-ring-num {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.score-ring-num span:first-child { font-size: 1.4rem; font-weight: 900; line-height: 1; }
+.score-ring-num span:last-child { font-size: 0.55rem; font-weight: 700; opacity: 0.6; letter-spacing: 0.08em; }
+.eco-score-info h2 { font-size: 0.95rem; font-weight: 700; }
+.eco-score-info p { font-size: 0.75rem; opacity: 0.7; margin-top: 4px; }
+.eco-score-info .stat-row { display: flex; gap: 12px; margin-top: 10px; }
+.stat-pill {
+  background: rgba(255,255,255,0.12); border-radius: 999px;
+  padding: 4px 10px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em;
+}
+
+/* ── ENV METRICS ── */
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.metric-card {
+  background: var(--surface-card);
+  border: 1px solid rgba(15,46,27,0.08);
+  border-radius: 16px; padding: 14px;
+  backdrop-filter: blur(12px);
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: default;
+}
+.metric-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.metric-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.metric-icon { font-size: 18px; }
+.metric-badge {
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+}
+.badge-safe { background: rgba(39,174,96,0.12); color: var(--safe); }
+.badge-moderate { background: rgba(243,156,18,0.12); color: var(--moderate); }
+.badge-hazard { background: rgba(231,76,60,0.12); color: var(--hazard); }
+.metric-value { font-size: 1.5rem; font-weight: 900; color: var(--primary); letter-spacing: -0.04em; }
+.metric-unit { font-size: 0.65rem; font-weight: 600; color: var(--on-surface-muted); }
+.metric-label { font-size: 0.7rem; color: var(--on-surface-muted); margin-top: 2px; }
+.metric-bar { height: 4px; background: rgba(15,46,27,0.1); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+.metric-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+
+/* ── ROUTE CARDS ── */
+.route-card {
+  background: var(--surface-card);
+  border: 1.5px solid rgba(255,255,255,0.7);
+  border-radius: 16px; padding: 14px;
+  cursor: pointer; transition: all 0.2s;
+  backdrop-filter: blur(12px);
+  position: relative; overflow: hidden;
+}
+.route-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent-green); border-radius: 3px 0 0 3px;
+  transition: width 0.2s;
+}
+.route-card:hover { box-shadow: var(--shadow); transform: translateX(2px); }
+.route-card.selected { border-color: rgba(15,46,27,0.25); box-shadow: 0 0 0 2px rgba(15,46,27,0.1); }
+.route-card.selected::before { width: 4px; }
+.route-card-header { display: flex; align-items: center; justify-between; gap: 10px; }
+.route-icon-wrap {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(15,46,27,0.07); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.route-icon-wrap .material-symbols-outlined { font-size: 18px; color: var(--primary); }
+.route-info { flex: 1; }
+.route-name { font-size: 0.875rem; font-weight: 700; color: var(--primary); }
+.route-meta { font-size: 0.7rem; color: var(--on-surface-muted); margin-top: 2px; }
+.route-score { text-align: right; }
+.route-score .pts { font-size: 1.1rem; font-weight: 900; color: var(--accent-green); }
+.route-score .pts-label { font-size: 0.55rem; font-weight: 800; color: var(--on-surface-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.route-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.route-tag {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em;
+  padding: 3px 8px; border-radius: 999px; text-transform: uppercase;
+}
+.tag-walk { background: rgba(39,174,96,0.1); color: var(--safe); }
+.tag-bike { background: rgba(52,152,219,0.1); color: #2980B9; }
+.tag-transit { background: rgba(155,89,182,0.1); color: #8E44AD; }
+.tag-eco { background: rgba(15,46,27,0.1); color: var(--primary); }
+
+/* ── ALERTS ── */
+.alert-item {
+  background: var(--surface-card);
+  border-radius: 14px; padding: 12px 14px;
+  display: flex; gap: 12px; align-items: flex-start;
+  border: 1px solid rgba(15,46,27,0.07);
+}
+.alert-dot {
+  width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
+}
+.alert-dot.red { background: var(--hazard); box-shadow: 0 0 6px rgba(231,76,60,0.5); }
+.alert-dot.amber { background: var(--moderate); box-shadow: 0 0 6px rgba(243,156,18,0.5); }
+.alert-dot.green { background: var(--safe); box-shadow: 0 0 6px rgba(39,174,96,0.4); }
+.alert-text h4 { font-size: 0.8rem; font-weight: 700; }
+.alert-text p { font-size: 0.7rem; color: var(--on-surface-muted); margin-top: 2px; }
+.alert-time { font-size: 0.6rem; color: var(--on-surface-muted); margin-top: 4px; }
+
+/* ── POLLEN TOGGLE ── */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface-card); border-radius: 14px; padding: 12px 14px;
+  border: 1px solid rgba(15,46,27,0.07);
+}
+.toggle-info h4 { font-size: 0.82rem; font-weight: 700; }
+.toggle-info p { font-size: 0.7rem; color: var(--on-surface-muted); }
+.toggle-switch { position: relative; width: 44px; height: 24px; cursor: pointer; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0; background: rgba(15,46,27,0.15);
+  border-radius: 999px; transition: background 0.25s;
+}
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; background: #fff;
+  border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  transition: transform 0.25s;
+}
+.toggle-switch input:checked ~ .toggle-track { background: var(--accent-green); }
+.toggle-switch input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+/* ── CTA BUTTON ── */
+.cta-btn {
+  width: 100%; padding: 14px; border: none; border-radius: 999px;
+  background: var(--primary); color: #fff;
+  font-family: 'Manrope', sans-serif; font-size: 0.95rem; font-weight: 800;
+  letter-spacing: -0.01em; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px rgba(15,46,27,0.25);
+}
+.cta-btn:hover { opacity: 0.92; box-shadow: 0 6px 28px rgba(15,46,27,0.3); }
+.cta-btn:active { transform: scale(0.98); }
+.cta-btn .material-symbols-outlined { font-size: 18px; }
+
+/* ── MAP AREA ── */
+.map-area {
+  position: relative; overflow: hidden;
+  background: #dce8dc;
+}
+
+/* Simulated map canvas */
+.map-canvas {
+  width: 100%; height: 100%;
+  position: relative; background: #e8f0e8;
+}
+
+/* SVG grid map */
+.map-svg { width: 100%; height: 100%; }
+
+/* Heatmap overlay */
+.heatmap-layer {
+  position: absolute; inset: 0; pointer-events: none;
+  opacity: 0; transition: opacity 0.5s;
+}
+.heatmap-layer.visible { opacity: 1; }
+
+/* Floating controls */
+.map-controls {
+  position: absolute; right: 20px; top: 20px;
+  display: flex; flex-direction: column; gap: 10px; z-index: 10;
+}
+
+.map-ctrl-group {
+  background: rgba(248,250,248,0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 16px; padding: 6px;
+  box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.map-ctrl-btn {
+  width: 44px; height: 44px; border: none; border-radius: 12px;
+  background: transparent; cursor: pointer; color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Manrope', sans-serif; transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+.map-ctrl-btn .material-symbols-outlined { font-size: 20px; }
+.map-ctrl-btn:hover { background: rgba(15,46,27,0.07); }
+.map-ctrl-btn.active { background: var(--primary) !important; color: #fff !important; }
+.map-ctrl-btn .ctrl-label {
+  position: absolute; right: calc(100% + 10px);
+  background: rgba(15,46,27,0.9); color: #fff;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 8px; border-radius: 6px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity 0.15s;
+}
+.map-ctrl-btn:hover .ctrl-label { opacity: 1; }
+
+/* ── POLLUTION ALERT OVERLAY ── */
+.pollution-alert {
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+  z-index: 20; display: flex; gap: 12px; align-items: stretch;
+  max-width: calc(100% - 48px);
+}
+
+.alert-card {
+  background: rgba(248,250,248,0.92);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 20px; padding: 16px 20px;
+  box-shadow: var(--shadow-lg);
+  display: flex; gap: 14px; align-items: center;
+  min-width: 300px;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.alert-icon-wrap {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.alert-icon-wrap.red { background: rgba(231,76,60,0.1); }
+.alert-icon-wrap.amber { background: rgba(243,156,18,0.1); }
+.alert-icon-wrap .material-symbols-outlined { font-size: 22px; }
+.alert-icon-wrap.red .material-symbols-outlined { color: var(--hazard); }
+.alert-icon-wrap.amber .material-symbols-outlined { color: var(--moderate); }
+.alert-card-text h3 { font-size: 0.9rem; font-weight: 800; color: var(--primary); }
+.alert-card-text p { font-size: 0.75rem; color: var(--on-surface-muted); margin-top: 2px; }
+.alert-card-text .alt-route-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 8px; background: var(--primary); color: #fff;
+  border: none; border-radius: 999px; padding: 5px 12px;
+  font-family: 'Manrope', sans-serif; font-size: 0.7rem; font-weight: 800;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.alert-card-text .alt-route-btn:hover { opacity: 0.85; }
+.alert-card-close {
+  position: absolute; top: 10px; right: 10px;
+  border: none; background: transparent; color: var(--on-surface-muted);
+  cursor: pointer; border-radius: 50%; width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: background 0.15s;
+}
+.alert-card-close:hover { background: rgba(15,46,27,0.07); }
+
+/* Microphone noise indicator */
+.noise-indicator {
+  position: absolute; top: 20px; left: 20px; z-index: 10;
+  background: rgba(248,250,248,0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 14px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow);
+  font-size: 0.75rem;
+}
+.noise-bars { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
+.noise-bar {
+  width: 4px; background: var(--accent-green); border-radius: 2px;
+  animation: noisePulse 0.5s ease-in-out infinite;
+}
+.noise-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
+.noise-bar:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+.noise-bar:nth-child(3) { height: 10px; animation-delay: 0.05s; }
+.noise-bar:nth-child(4) { height: 16px; animation-delay: 0.15s; }
+.noise-bar:nth-child(5) { height: 6px; animation-delay: 0.08s; }
+
+@keyframes noisePulse {
+  0%, 100% { opacity: 1; transform: scaleY(1); }
+  50% { opacity: 0.5; transform: scaleY(0.6); }
+}
+.noise-level { font-weight: 700; color: var(--primary); }
+.noise-unit { color: var(--on-surface-muted); font-size: 0.65rem; }
+
+/* ── IMPACT PANEL ── */
+.impact-stat {
+  background: var(--surface-card);
+  border-radius: 14px; padding: 14px;
+  border: 1px solid rgba(15,46,27,0.07);
+  text-align: center;
+}
+.impact-stat .value { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: -0.04em; }
+.impact-stat .unit { font-size: 0.65rem; font-weight: 700; color: var(--on-surface-muted); }
+.impact-stat .label { font-size: 0.7rem; color: var(--on-surface-muted); margin-top: 4px; }
+.impact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+.progress-row { display: flex; flex-direction: column; gap: 6px; }
+.progress-label-row { display: flex; justify-content: space-between; align-items: center; }
+.progress-label { font-size: 0.75rem; font-weight: 600; color: var(--primary); }
+.progress-val { font-size: 0.7rem; font-weight: 700; color: var(--on-surface-muted); }
+.progress-track { height: 6px; background: rgba(15,46,27,0.08); border-radius: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 6px; background: var(--accent-green); transition: width 1.2s ease; }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px); z-index: 200; display: none;
+  align-items: center; justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 24px;
+  padding: 28px; width: 440px; max-width: calc(100vw - 40px);
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal h2 { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
+.modal-close {
+  float: right; border: none; background: rgba(15,46,27,0.07);
+  border-radius: 50%; width: 28px; height: 28px;
+  cursor: pointer; font-size: 14px; color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  margin-left: 10px;
+}
+.modal-body { display: flex; flex-direction: column; gap: 12px; }
+.modal-input-group { display: flex; flex-direction: column; gap: 6px; }
+.modal-input-group label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--on-surface-muted); }
+.modal-input-group input, .modal-input-group select {
+  background: rgba(15,46,27,0.05); border: 1px solid rgba(15,46,27,0.1);
+  border-radius: 12px; padding: 10px 14px; font-family: 'Manrope', sans-serif;
+  font-size: 0.875rem; color: var(--on-surface); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.modal-input-group input:focus, .modal-input-group select:focus {
+  border-color: rgba(15,46,27,0.25); box-shadow: 0 0 0 3px rgba(15,46,27,0.08);
+}
+
+/* ── NOTIFICATION TOAST ── */
+.toast-container {
+  position: fixed; top: 76px; right: 20px; z-index: 300;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.toast {
+  background: var(--primary); color: #fff;
+  border-radius: 14px; padding: 12px 18px;
+  font-size: 0.8rem; font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 10px;
+  animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: all;
+}
+.toast .material-symbols-outlined { font-size: 18px; }
+.toast.success { background: var(--accent-green); }
+.toast.warning { background: var(--accent-amber); }
+.toast.danger { background: var(--accent-red); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(30px); }
+}
+.toast.hiding { animation: toastOut 0.3s ease forwards; }
+
+/* ── MAP ROUTE PATH ── */
+.route-path {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  transition: stroke-dashoffset 2s ease;
+}
+.route-path.drawn { stroke-dashoffset: 0; }
+
+/* ── LEGEND ── */
+.map-legend {
+  position: absolute; bottom: 24px; right: 24px; z-index: 10;
+  background: rgba(248,250,248,0.92); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 14px; padding: 12px 14px;
+  box-shadow: var(--shadow);
+}
+.legend-title { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--on-surface-muted); margin-bottom: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; font-weight: 600; margin-bottom: 4px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .app-shell { grid-template-columns: 1fr; grid-template-rows: 64px 1fr; }
+  .sidebar { display: none; }
+  .map-area { display: block; }
+}
+
+/* ── TYPING EFFECT ── */
+.typing { border-right: 2px solid var(--primary); animation: blink 0.8s step-end infinite; }
+@keyframes blink { 0%, 100% { border-color: transparent; } 50% { border-color: var(--primary); } }
+
+/* ── PULSE MARKER ── */
+.pulse-marker {
+  position: absolute;
+  width: 16px; height: 16px;
+}
+.pulse-marker::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: var(--accent-green); animation: pulse 2s ease-out infinite;
+}
+.pulse-marker::after {
+  content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px;
+  border-radius: 50%; background: #fff;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  70% { transform: scale(3); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(15,46,27,0.2); border-radius: 4px; }
+
+/* Material symbols style */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.route-card-header { display: flex; align-items: center; gap: 10px; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-icon">
+        <span class="material-symbols-outlined">eco</span>
+      </div>
+      <h1>EcoRoute</h1>
+    </div>
+
+    <div class="search-bar">
+      <span class="material-symbols-outlined">search</span>
+      <input id="searchInput" placeholder="Search eco-friendly destination..." type="text"/>
+      <span class="material-symbols-outlined" style="cursor:pointer" onclick="openSearchModal()">tune</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="icon-btn alert-badge" title="Alerts" onclick="showTab('alerts')">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+      <button class="icon-btn" title="Profile" onclick="showToast('Profile feature coming soon!', 'info')">
+        <span class="material-symbols-outlined">account_circle</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab active" onclick="showTab('route')" id="tab-route">
+        <span class="material-symbols-outlined">conversion_path</span>
+        Route
+      </button>
+      <button class="sidebar-tab" onclick="showTab('environment')" id="tab-environment">
+        <span class="material-symbols-outlined">air</span>
+        Air
+      </button>
+      <button class="sidebar-tab" onclick="showTab('alerts')" id="tab-alerts">
+        <span class="material-symbols-outlined">warning</span>
+        Alerts
+      </button>
+      <button class="sidebar-tab" onclick="showTab('impact')" id="tab-impact">
+        <span class="material-symbols-outlined">eco</span>
+        Impact
+      </button>
+    </div>
+
+    <div class="sidebar-content">
+
+      <!-- ── ROUTE TAB ── -->
+      <div class="tab-panel active" id="panel-route">
+
+        <!-- Eco Score -->
+        <div class="eco-score-card">
+          <div class="score-ring-wrap">
+            <svg viewBox="0 0 72 72" width="72" height="72">
+              <circle class="score-ring-bg" cx="36" cy="36" r="30" stroke-width="4" fill="none"/>
+              <circle class="score-ring-fill" id="scoreRing" cx="36" cy="36" r="30" stroke-width="4" fill="none"
+                stroke-dasharray="188" stroke-dashoffset="38"/>
+            </svg>
+            <div class="score-ring-num">
+              <span id="scoreVal">82</span>
+              <span>ECO</span>
+            </div>
+          </div>
+          <div class="eco-score-info">
+            <h2 id="scoreLabel">Exceptional Air Quality</h2>
+            <p>Carbon reduced by <span id="carbonVal">2.4</span>kg</p>
+            <div class="stat-row">
+              <span class="stat-pill">AQI 28</span>
+              <span class="stat-pill">42 dB</span>
+              <span class="stat-pill">Low Pollen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transport Mode -->
+        <div class="section-label" style="margin-top:4px;">Transport Mode</div>
+        <div style="display:flex;gap:8px;">
+          <button class="mode-btn active" data-mode="walk" onclick="selectMode(this,'walk')" style="flex:1;padding:10px 6px;border-radius:12px;border:1.5px solid rgba(15,46,27,0.15);background:var(--primary);color:#fff;font-family:'Manrope',sans-serif;font-size:0.7rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.15s;">
+            <span class="material-symbols-outlined" style="font-size:18px;">directions_walk</span>Walk
+          </button>
+          <button class="mode-btn" data-mode="bike" onclick="selectMode(this,'bike')" style="flex:1;padding:10px 6px;border-radius:12px;border:1.5px solid rgba(15,46,27,0.12);background:transparent;color:var(--primary);font-family:'Manrope',sans-serif;font-size:0.7rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.15s;">
+            <span class="material-symbols-outlined" style="font-size:18px;">directions_bike</span>Bike
+          </button>
+          <button class="mode-btn" data-mode="transit" onclick="selectMode(this,'transit')" style="flex:1;padding:10px 6px;border-radius:12px;border:1.5px solid rgba(15,46,27,0.12);background:transparent;color:var(--primary);font-family:'Manrope',sans-serif;font-size:0.7rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.15s;">
+            <span class="material-symbols-outlined" style="font-size:18px;">directions_bus</span>Transit
+          </button>
+          <button class="mode-btn" data-mode="drive" onclick="selectMode(this,'drive')" style="flex:1;padding:10px 6px;border-radius:12px;border:1.5px solid rgba(15,46,27,0.12);background:transparent;color:var(--primary);font-family:'Manrope',sans-serif;font-size:0.7rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.15s;">
+            <span class="material-symbols-outlined" style="font-size:18px;">directions_car</span>Drive
+          </button>
+        </div>
+
+        <!-- Toggle Options -->
+        <div class="section-label">Route Preferences</div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <h4>🌸 Pollen Mode</h4>
+            <p>Avoid high-pollen zones</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pollenToggle" onchange="updatePrefs()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <h4>🌬️ Air Quality Filter</h4>
+            <p>Prioritize low-AQI paths</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="aqiToggle" checked onchange="updatePrefs()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <h4>🔇 Noise Filter</h4>
+            <p>Avoid high-traffic noise</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="noiseToggle" onchange="updatePrefs()"/>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <!-- Recommended Routes -->
+        <div class="section-label">Recommended Routes</div>
+
+        <div id="routeList" style="display:flex;flex-direction:column;gap:10px;">
+          <div class="route-card selected" onclick="selectRoute(this, 0)">
+            <div class="route-card-header">
+              <div class="route-icon-wrap"><span class="material-symbols-outlined">park</span></div>
+              <div class="route-info">
+                <div class="route-name">Forest Perimeter</div>
+                <div class="route-meta">12 min · 0.8 miles · Eco Score 94</div>
+              </div>
+              <div class="route-score"><div class="pts">+14</div><div class="pts-label">Pts</div></div>
+            </div>
+            <div class="route-tags">
+              <span class="route-tag tag-walk">Walk</span>
+              <span class="route-tag tag-eco">Greenest</span>
+            </div>
+          </div>
+
+          <div class="route-card" onclick="selectRoute(this, 1)">
+            <div class="route-card-header">
+              <div class="route-icon-wrap"><span class="material-symbols-outlined">directions_bike</span></div>
+              <div class="route-info">
+                <div class="route-name">Riverside Cycle</div>
+                <div class="route-meta">5 min · 1.2 miles · Eco Score 88</div>
+              </div>
+              <div class="route-score"><div class="pts">+8</div><div class="pts-label">Pts</div></div>
+            </div>
+            <div class="route-tags">
+              <span class="route-tag tag-bike">Bike</span>
+              <span class="route-tag tag-eco">Fastest</span>
+            </div>
+          </div>
+
+          <div class="route-card" onclick="selectRoute(this, 2)">
+            <div class="route-card-header">
+              <div class="route-icon-wrap"><span class="material-symbols-outlined">directions_bus</span></div>
+              <div class="route-info">
+                <div class="route-name">Green Transit Line</div>
+                <div class="route-meta">8 min · 2.1 miles · Eco Score 76</div>
+              </div>
+              <div class="route-score"><div class="pts">+5</div><div class="pts-label">Pts</div></div>
+            </div>
+            <div class="route-tags">
+              <span class="route-tag tag-transit">Transit</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="cta-btn" onclick="startNavigation()">
+          <span class="material-symbols-outlined">near_me</span>
+          Start Navigation
+        </button>
+      </div>
+
+      <!-- ── ENVIRONMENT TAB ── -->
+      <div class="tab-panel" id="panel-environment">
+        <div class="section-label">Live Environmental Data</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon">🌫️</span>
+              <span class="metric-badge badge-safe">SAFE</span>
+            </div>
+            <div class="metric-value" id="aqiValue">28</div>
+            <div class="metric-unit">AQI</div>
+            <div class="metric-label">Air Quality Index</div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="aqiBar" style="width:28%;background:var(--safe)"></div></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon">🔊</span>
+              <span class="metric-badge badge-moderate">MOD</span>
+            </div>
+            <div class="metric-value" id="noiseValue">42</div>
+            <div class="metric-unit">dB</div>
+            <div class="metric-label">Noise Level</div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="noiseBar" style="width:42%;background:var(--moderate)"></div></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon">🌸</span>
+              <span class="metric-badge badge-safe">LOW</span>
+            </div>
+            <div class="metric-value" id="pollenValue">12</div>
+            <div class="metric-unit">grains/m³</div>
+            <div class="metric-label">Pollen Count</div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="pollenBar" style="width:15%;background:var(--safe)"></div></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon">💨</span>
+              <span class="metric-badge badge-safe">GOOD</span>
+            </div>
+            <div class="metric-value" id="pm25Value">8</div>
+            <div class="metric-unit">µg/m³</div>
+            <div class="metric-label">PM2.5 Particles</div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="pm25Bar" style="width:16%;background:var(--safe)"></div></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon">🌡️</span>
+              <span class="metric-badge badge-safe">NORM</span>
+            </div>
+            <div class="metric-value" id="tempValue">24</div>
+            <div class="metric-unit">°C</div>
+            <div class="metric-label">Temperature</div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="tempBar" style="width:60%;background:var(--safe)"></div></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon">💧</span>
+              <span class="metric-badge badge-moderate">MOD</span>
+            </div>
+            <div class="metric-value" id="humValue">68</div>
+            <div class="metric-unit">%</div>
+            <div class="metric-label">Humidity</div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="humBar" style="width:68%;background:var(--moderate)"></div></div>
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-top:4px;">MQ135 Sensor Status</div>
+        <div style="background:var(--surface-card);border-radius:14px;padding:14px;border:1px solid rgba(15,46,27,0.07);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--safe);box-shadow:0 0 6px rgba(39,174,96,0.5);"></div>
+            <span style="font-size:0.8rem;font-weight:700;color:var(--primary);">MQ135 Gas Sensor — Online</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.72rem;">
+            <div>CO₂: <strong style="color:var(--primary);">412 ppm</strong></div>
+            <div>CO: <strong style="color:var(--safe);">0.3 ppm</strong></div>
+            <div>VOCs: <strong style="color:var(--safe);">Low</strong></div>
+            <div>NH₃: <strong style="color:var(--safe);">0.1 ppm</strong></div>
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-top:4px;">Trend (Last 6h)</div>
+        <div style="background:var(--surface-card);border-radius:14px;padding:14px;border:1px solid rgba(15,46,27,0.07);">
+          <canvas id="trendChart" width="260" height="80" style="width:100%;height:80px;"></canvas>
+        </div>
+      </div>
+
+      <!-- ── ALERTS TAB ── -->
+      <div class="tab-panel" id="panel-alerts">
+        <div class="section-label">Active Alerts</div>
+        <div id="alertsList" style="display:flex;flex-direction:column;gap:10px;">
+          <div class="alert-item">
+            <div class="alert-dot red"></div>
+            <div class="alert-text">
+              <h4>High PM2.5 — Industrial Zone</h4>
+              <p>AQI exceeds 150 near the north industrial district. Alternative route available.</p>
+              <div class="alert-time">2 min ago · 0.4 mi away</div>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot amber"></div>
+            <div class="alert-text">
+              <h4>Elevated Noise — Main Street</h4>
+              <p>Construction detected, noise level 78dB. Consider Forest Perimeter route.</p>
+              <div class="alert-time">8 min ago · 0.2 mi away</div>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot amber"></div>
+            <div class="alert-text">
+              <h4>Moderate Pollen — Park Zone</h4>
+              <p>Grass pollen at 38 grains/m³. Enable Pollen Mode for safer routing.</p>
+              <div class="alert-time">15 min ago · On-route</div>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot green"></div>
+            <div class="alert-text">
+              <h4>Clear Zone — Riverside Path</h4>
+              <p>AQI 14, Noise 32dB. Optimal environmental conditions for travel.</p>
+              <div class="alert-time">Just now · Active route</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="cta-btn" style="margin-top:8px;" onclick="refreshAlerts()">
+          <span class="material-symbols-outlined">refresh</span>
+          Refresh Alerts
+        </button>
+      </div>
+
+      <!-- ── IMPACT TAB ── -->
+      <div class="tab-panel" id="panel-impact">
+        <div class="section-label">Your Environmental Impact</div>
+
+        <div class="impact-grid">
+          <div class="impact-stat">
+            <div class="value" id="carbonSaved">12.6</div>
+            <div class="unit">kg CO₂</div>
+            <div class="label">Saved this month</div>
+          </div>
+          <div class="impact-stat">
+            <div class="value" id="ecoTrips">47</div>
+            <div class="unit">trips</div>
+            <div class="label">Eco routes taken</div>
+          </div>
+          <div class="impact-stat">
+            <div class="value" id="totalPts">328</div>
+            <div class="unit">pts</div>
+            <div class="label">EcoPoints earned</div>
+          </div>
+        </div>
+
+        <div class="section-label">Health Exposure Reduction</div>
+        <div style="display:flex;flex-direction:column;gap:10px;background:var(--surface-card);border-radius:14px;padding:14px;border:1px solid rgba(15,46,27,0.07);">
+          <div class="progress-row">
+            <div class="progress-label-row">
+              <span class="progress-label">Particulate Avoided</span>
+              <span class="progress-val">-62%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width:62%"></div></div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label-row">
+              <span class="progress-label">Noise Exposure</span>
+              <span class="progress-val">-48%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width:48%;background:#2980B9"></div></div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label-row">
+              <span class="progress-label">Pollen Contact</span>
+              <span class="progress-val">-35%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width:35%;background:#8E44AD"></div></div>
+          </div>
+        </div>
+
+        <div class="section-label">Weekly Streak</div>
+        <div style="background:var(--primary);border-radius:14px;padding:14px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:0.85rem;font-weight:700;">🔥 7-Day Green Streak</span>
+            <span style="font-size:0.7rem;opacity:0.7;">+50 bonus pts</span>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div id="streakDays" style="display:flex;gap:4px;flex:1;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar-content -->
+  </aside>
+
+  <!-- ── MAP AREA ── -->
+  <div class="map-area">
+
+    <!-- Map SVG (simulated interactive map) -->
+    <svg class="map-svg" id="mapSvg" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+      <!-- Base map background -->
+      <rect width="900" height="600" fill="#e8efe8"/>
+
+      <!-- City grid - roads -->
+      <g stroke="#d0ddd0" stroke-width="8" fill="none" opacity="0.8">
+        <line x1="0" y1="150" x2="900" y2="150"/>
+        <line x1="0" y1="300" x2="900" y2="300"/>
+        <line x1="0" y1="450" x2="900" y2="450"/>
+        <line x1="150" y1="0" x2="150" y2="600"/>
+        <line x1="300" y1="0" x2="300" y2="600"/>
+        <line x1="450" y1="0" x2="450" y2="600"/>
+        <line x1="600" y1="0" x2="600" y2="600"/>
+        <line x1="750" y1="0" x2="750" y2="600"/>
+      </g>
+      <!-- Minor roads -->
+      <g stroke="#dae7da" stroke-width="3" fill="none">
+        <line x1="0" y1="75" x2="900" y2="75"/>
+        <line x1="0" y1="225" x2="900" y2="225"/>
+        <line x1="0" y1="375" x2="900" y2="375"/>
+        <line x1="0" y1="525" x2="900" y2="525"/>
+        <line x1="75" y1="0" x2="75" y2="600"/>
+        <line x1="225" y1="0" x2="225" y2="600"/>
+        <line x1="375" y1="0" x2="375" y2="600"/>
+        <line x1="525" y1="0" x2="525" y2="600"/>
+        <line x1="675" y1="0" x2="675" y2="600"/>
+        <line x1="825" y1="0" x2="825" y2="600"/>
+      </g>
+
+      <!-- Park areas -->
+      <rect x="320" y="80" width="180" height="140" rx="20" fill="#b8ddb8" opacity="0.6"/>
+      <text x="410" y="155" text-anchor="middle" fill="#2D7A4F" font-size="11" font-family="Manrope" font-weight="700">🌳 City Park</text>
+
+      <rect x="560" y="240" width="120" height="100" rx="16" fill="#b8ddb8" opacity="0.6"/>
+      <text x="620" y="295" text-anchor="middle" fill="#2D7A4F" font-size="10" font-family="Manrope" font-weight="700">🌿 Gardens</text>
+
+      <rect x="60" y="320" width="160" height="120" rx="14" fill="#b8ddb8" opacity="0.5"/>
+      <text x="140" y="385" text-anchor="middle" fill="#2D7A4F" font-size="10" font-family="Manrope" font-weight="700">🌲 Reserve</text>
+
+      <!-- Water body (river) -->
+      <path d="M0,400 Q100,380 200,410 Q300,440 400,420 Q500,400 600,430 Q700,460 800,440 Q850,430 900,450" stroke="#a8c8e8" stroke-width="18" fill="none" opacity="0.7"/>
+      <text x="430" y="445" fill="#5588aa" font-size="10" font-family="Manrope" font-weight="600">🏞️ Riverside Path</text>
+
+      <!-- Buildings blocks -->
+      <g fill="#d4dfd4" opacity="0.7">
+        <rect x="20" y="20" width="50" height="50" rx="4"/>
+        <rect x="80" y="20" width="40" height="50" rx="4"/>
+        <rect x="20" y="80" width="60" height="40" rx="4"/>
+
+        <rect x="680" y="20" width="50" height="50" rx="4"/>
+        <rect x="740" y="20" width="60" height="35" rx="4"/>
+        <rect x="680" y="80" width="40" height="40" rx="4"/>
+
+        <rect x="160" y="460" width="70" height="55" rx="4"/>
+        <rect x="240" y="460" width="55" height="55" rx="4"/>
+
+        <rect x="680" y="460" width="60" height="50" rx="4"/>
+        <rect x="750" y="460" width="70" height="50" rx="4"/>
+        <rect x="820" y="460" width="60" height="50" rx="4"/>
+      </g>
+
+      <!-- Industrial zone (pollution marker) -->
+      <rect x="700" y="120" width="160" height="100" rx="8" fill="#e8c8a8" opacity="0.4"/>
+      <text x="780" y="170" text-anchor="middle" fill="#a05020" font-size="10" font-family="Manrope" font-weight="700">🏭 Industrial Zone</text>
+
+      <!-- Heatmap pollution blobs -->
+      <g id="heatmapBlobs" opacity="0">
+        <circle cx="780" cy="170" r="80" fill="rgba(231,76,60,0.25)"/>
+        <circle cx="300" cy="300" r="50" fill="rgba(243,156,18,0.2)"/>
+        <circle cx="500" cy="150" r="40" fill="rgba(243,156,18,0.15)"/>
+        <circle cx="400" cy="150" r="90" fill="rgba(39,174,96,0.15)"/>
+        <circle cx="620" cy="290" r="60" fill="rgba(39,174,96,0.2)"/>
+        <circle cx="140" cy="380" r="70" fill="rgba(39,174,96,0.2)"/>
+      </g>
+
+      <!-- Route paths -->
+      <g id="routePaths">
+        <!-- Route 0: Forest Perimeter (green, safe) -->
+        <path id="routePath0" class="route-path"
+          d="M 200,480 L 200,220 Q 200,200 220,200 L 320,200 Q 340,200 340,180 L 340,100 Q 340,80 360,80 L 480,80 Q 500,80 500,100 L 500,200 Q 500,220 520,220 L 600,220"
+          stroke="#27AE60" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="2000" stroke-dashoffset="2000"/>
+
+        <!-- Route 1: Riverside Cycle (blue) -->
+        <path id="routePath1" class="route-path"
+          d="M 200,480 Q 280,450 350,430 Q 450,410 550,420 Q 630,430 700,440"
+          stroke="#2980B9" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="1000" stroke-dashoffset="1000"/>
+
+        <!-- Route 2: Transit line (purple) -->
+        <path id="routePath2" class="route-path"
+          d="M 200,480 L 200,300 L 450,300 L 600,300 L 700,300 L 700,440"
+          stroke="#8E44AD" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="1200" stroke-dashoffset="1200"/>
+      </g>
+
+      <!-- User location marker -->
+      <circle cx="200" cy="480" r="12" fill="rgba(15,46,27,0.15)"/>
+      <circle cx="200" cy="480" r="7" fill="#0F2E1B"/>
+      <circle cx="200" cy="480" r="3" fill="#fff"/>
+
+      <!-- Destination marker -->
+      <g id="destMarker" opacity="0">
+        <circle cx="600" cy="220" r="14" fill="rgba(212,134,10,0.2)"/>
+        <circle cx="600" cy="220" r="8" fill="#D4860A"/>
+        <circle cx="600" cy="220" r="3" fill="#fff"/>
+      </g>
+
+      <!-- Map labels -->
+      <text x="200" y="510" text-anchor="middle" fill="#0F2E1B" font-size="10" font-family="Manrope" font-weight="800">📍 You</text>
+
+      <!-- Zone labels -->
+      <text x="300" y="320" text-anchor="middle" fill="#666" font-size="9" font-family="Manrope">Downtown</text>
+      <text x="80" y="500" text-anchor="middle" fill="#888" font-size="9" font-family="Manrope">Westside</text>
+    </svg>
+
+    <!-- Noise indicator -->
+    <div class="noise-indicator" id="noiseIndicator">
+      <div class="noise-bars">
+        <div class="noise-bar"></div>
+        <div class="noise-bar"></div>
+        <div class="noise-bar"></div>
+        <div class="noise-bar"></div>
+        <div class="noise-bar"></div>
+      </div>
+      <div>
+        <div><span class="noise-level" id="liveNoise">42</span> <span class="noise-unit">dB</span></div>
+        <div style="font-size:0.62rem;color:var(--on-surface-muted);font-weight:600;">Ambient Noise</div>
+      </div>
+    </div>
+
+    <!-- Map layer controls -->
+    <div class="map-controls">
+      <div class="map-ctrl-group">
+        <button class="map-ctrl-btn active" id="layerRoute" onclick="toggleLayer('route')" title="Route">
+          <span class="material-symbols-outlined">navigation</span>
+          <span class="ctrl-label">Routes</span>
+        </button>
+        <button class="map-ctrl-btn" id="layerAQI" onclick="toggleLayer('aqi')" title="AQI Heatmap">
+          <span class="material-symbols-outlined">airwave</span>
+          <span class="ctrl-label">AQI Heatmap</span>
+        </button>
+        <button class="map-ctrl-btn" id="layerNoise" onclick="toggleLayer('noise')" title="Noise">
+          <span class="material-symbols-outlined">volume_down</span>
+          <span class="ctrl-label">Noise Map</span>
+        </button>
+        <button class="map-ctrl-btn" id="layerPollen" onclick="toggleLayer('pollen')" title="Pollen">
+          <span class="material-symbols-outlined">local_florist</span>
+          <span class="ctrl-label">Pollen</span>
+        </button>
+      </div>
+      <button class="map-ctrl-btn" style="background:rgba(248,250,248,0.9);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.6);border-radius:14px;box-shadow:var(--shadow);width:52px;height:52px;" onclick="locateUser()">
+        <span class="material-symbols-outlined">my_location</span>
+        <span class="ctrl-label">My Location</span>
+      </button>
+    </div>
+
+    <!-- Pollution alert overlay -->
+    <div class="pollution-alert" id="pollutionAlert">
+      <div class="alert-card" style="position:relative;">
+        <button class="alert-card-close" onclick="dismissAlert()">✕</button>
+        <div class="alert-icon-wrap red">
+          <span class="material-symbols-outlined">warning</span>
+        </div>
+        <div class="alert-card-text">
+          <h3>⚠️ High Pollution Detected</h3>
+          <p>Industrial zone ahead — AQI 158. Hazardous for sensitive groups.</p>
+          <button class="alt-route-btn" onclick="selectRoute(document.querySelector('.route-card'),0)">
+            <span class="material-symbols-outlined" style="font-size:14px;">alt_route</span>
+            Switch to Forest Route
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map legend -->
+    <div class="map-legend" id="mapLegend" style="display:none;">
+      <div class="legend-title">Pollution Level</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--safe)"></div> Good (AQI 0–50)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--moderate)"></div> Moderate (51–100)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--hazard)"></div> Hazardous (>150)</div>
+    </div>
+
+  </div><!-- /map-area -->
+
+</div><!-- /app-shell -->
+
+<!-- ── SEARCH/ROUTE MODAL ── -->
+<div class="modal-backdrop" id="searchModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSearchModal()">✕</button>
+    <h2>Plan Eco Route</h2>
+    <div class="modal-body">
+      <div class="modal-input-group">
+        <label>From</label>
+        <input type="text" id="fromInput" placeholder="Your current location" value="IIITM Gwalior Campus"/>
+      </div>
+      <div class="modal-input-group">
+        <label>To</label>
+        <input type="text" id="toInput" placeholder="Enter destination"/>
+      </div>
+      <div class="modal-input-group">
+        <label>Priority</label>
+        <select id="prioritySelect">
+          <option value="eco">Greenest route (Eco-first)</option>
+          <option value="time">Fastest + eco balance</option>
+          <option value="health">Health-optimal (min exposure)</option>
+          <option value="pollen">Pollen-free priority</option>
+        </select>
+      </div>
+      <button class="cta-btn" onclick="planRoute()">
+        <span class="material-symbols-outlined">alt_route</span>
+        Find Eco Routes
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── STATE ──
+const state = {
+  activeTab: 'route',
+  activeLayer: 'route',
+  selectedRoute: 0,
+  navigating: false,
+  aqiData: [28, 32, 45, 38, 52, 44, 28],
+  noiseBase: 42,
+};
+
+// ── TABS ──
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  state.activeTab = tab;
+}
+
+// ── ROUTE SELECTION ──
+function selectRoute(el, idx) {
+  document.querySelectorAll('.route-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedRoute = idx;
+
+  // Animate the corresponding path
+  const scores = [82, 74, 68];
+  const labels = ['Exceptional Air Quality', 'Good Riverside Air', 'Moderate Urban Air'];
+  const carbon = [2.4, 1.8, 1.1];
+
+  updateScore(scores[idx], labels[idx], carbon[idx]);
+  drawRoute(idx);
+  showToast(['Forest Perimeter selected', 'Riverside Cycle selected', 'Transit Line selected'][idx], 'success');
+}
+
+function drawRoute(idx) {
+  // Hide all routes
+  for (let i = 0; i < 3; i++) {
+    const p = document.getElementById('routePath' + i);
+    p.style.transition = 'none';
+    p.style.strokeDashoffset = p.getAttribute('stroke-dasharray');
+    p.style.opacity = i === idx ? '1' : '0.2';
+  }
+  // Draw selected
+  setTimeout(() => {
+    const p = document.getElementById('routePath' + idx);
+    p.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1)';
+    p.style.strokeDashoffset = '0';
+  }, 50);
+
+  // Show destination
+  document.getElementById('destMarker').style.opacity = '1';
+}
+
+// ── SCORE UPDATE ──
+function updateScore(score, label, carbon) {
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('scoreLabel').textContent = label;
+  document.getElementById('carbonVal').textContent = carbon;
+
+  // Update ring (188 = circumference of r=30 circle)
+  const offset = 188 * (1 - score / 100);
+  const ring = document.getElementById('scoreRing');
+  ring.style.transition = 'stroke-dashoffset 1s ease';
+  ring.setAttribute('stroke-dashoffset', offset);
+}
+
+// ── TRANSPORT MODE ──
+function selectMode(btn, mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.style.background = 'transparent';
+    b.style.color = 'var(--primary)';
+    b.style.borderColor = 'rgba(15,46,27,0.12)';
+  });
+  btn.style.background = 'var(--primary)';
+  btn.style.color = '#fff';
+  btn.style.borderColor = 'var(--primary)';
+
+  const msgs = {walk:'Walking routes loaded',bike:'Cycling routes loaded',transit:'Transit routes loaded',drive:'Driving routes loaded (eco-scored)'};
+  showToast(msgs[mode], 'success');
+  recalculateRoutes(mode);
+}
+
+function recalculateRoutes(mode) {
+  const scoreMap = {walk:[94,88,76], bike:[88,96,70], transit:[76,72,85], drive:[55,52,48]};
+  const scores = scoreMap[mode] || [82,74,68];
+  const ecoLabels = [['Walk','Greenest'],['Bike','Fastest'],['Transit','']];
+  // Just flash a calculation effect
+  document.querySelector('#routeList').style.opacity = '0.5';
+  setTimeout(() => { document.querySelector('#routeList').style.opacity = '1'; }, 600);
+}
+
+// ── MAP LAYERS ──
+function toggleLayer(layer) {
+  document.querySelectorAll('.map-ctrl-btn').forEach(b => {
+    if (b.id === 'layer' + layer.charAt(0).toUpperCase() + layer.slice(1)) {
+      b.classList.toggle('active');
+    }
+  });
+
+  const heatBlobs = document.getElementById('heatmapBlobs');
+  const legend = document.getElementById('mapLegend');
+
+  if (layer === 'aqi' || layer === 'noise' || layer === 'pollen') {
+    const isActive = document.getElementById('layer' + layer.charAt(0).toUpperCase() + layer.slice(1)).classList.contains('active');
+    heatBlobs.style.opacity = isActive ? '1' : '0';
+    heatBlobs.style.transition = 'opacity 0.5s';
+    legend.style.display = isActive ? 'block' : 'none';
+  }
+
+  state.activeLayer = layer;
+  const msgs = {route:'Route layer active',aqi:'AQI heatmap toggled',noise:'Noise pollution map toggled',pollen:'Pollen overlay toggled'};
+  showToast(msgs[layer] || 'Layer updated', 'info');
+}
+
+// ── NAVIGATION ──
+function startNavigation() {
+  if (state.navigating) {
+    state.navigating = false;
+    showToast('Navigation stopped', 'warning');
+    return;
+  }
+  state.navigating = true;
+  drawRoute(state.selectedRoute);
+  showToast('🧭 Navigation started — Eco route active', 'success');
+
+  // Simulate movement and alerts
+  setTimeout(() => {
+    if (state.navigating) showToast('⚠️ Entering moderate pollen zone — 0.3mi ahead', 'warning');
+  }, 4000);
+  setTimeout(() => {
+    if (state.navigating) showToast('✅ Air quality: Excellent — you\'re on the green path!', 'success');
+  }, 8000);
+}
+
+// ── ALERTS ──
+function dismissAlert() {
+  document.getElementById('pollutionAlert').style.opacity = '0';
+  document.getElementById('pollutionAlert').style.transition = 'opacity 0.3s';
+  setTimeout(() => document.getElementById('pollutionAlert').style.display = 'none', 300);
+}
+
+function refreshAlerts() {
+  showToast('Fetching live environmental data...', 'info');
+  const list = document.getElementById('alertsList');
+  list.style.opacity = '0.4';
+  setTimeout(() => {
+    list.style.opacity = '1';
+    list.style.transition = 'opacity 0.4s';
+    showToast('Alerts updated — All systems live', 'success');
+    // Simulate new alert
+    const newAlert = document.createElement('div');
+    newAlert.className = 'alert-item';
+    newAlert.innerHTML = `<div class="alert-dot green"></div><div class="alert-text"><h4>Air cleared — University Road</h4><p>AQI dropped to 22 after morning traffic cleared.</p><div class="alert-time">Just now · 0.1 mi away</div></div>`;
+    list.insertBefore(newAlert, list.firstChild);
+  }, 1200);
+}
+
+// ── PREFERENCES ──
+function updatePrefs() {
+  const pollen = document.getElementById('pollenToggle').checked;
+  const aqi = document.getElementById('aqiToggle').checked;
+  const noise = document.getElementById('noiseToggle').checked;
+  const modes = [];
+  if (pollen) modes.push('pollen-free');
+  if (aqi) modes.push('low-AQI');
+  if (noise) modes.push('quiet');
+  if (modes.length) showToast('Routes updated: ' + modes.join(', ') + ' priority', 'success');
+}
+
+// ── LOCATE ──
+function locateUser() {
+  showToast('📍 Getting your location...', 'info');
+  setTimeout(() => showToast('Location found — IIITM Gwalior Campus', 'success'), 1000);
+}
+
+// ── SEARCH MODAL ──
+function openSearchModal() {
+  document.getElementById('searchModal').classList.add('open');
+}
+function closeSearchModal() {
+  document.getElementById('searchModal').classList.remove('open');
+}
+function planRoute() {
+  const to = document.getElementById('toInput').value;
+  if (!to) { showToast('Please enter a destination', 'warning'); return; }
+  closeSearchModal();
+  showToast(`Finding eco routes to "${to}"...`, 'info');
+  setTimeout(() => {
+    showToast('3 eco routes found! Greenest route highlighted.', 'success');
+    drawRoute(0);
+  }, 1500);
+}
+
+// Search input listener
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { document.getElementById('toInput').value = e.target.value; openSearchModal(); }
+});
+
+// ── TOAST ──
+function showToast(msg, type = 'info') {
+  const icons = {success:'check_circle', warning:'warning', danger:'error', info:'info'};
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type === 'info' ? '' : type}`;
+  toast.innerHTML = `<span class="material-symbols-outlined">${icons[type]||'info'}</span>${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ── LIVE DATA SIMULATION ──
+function simulateLiveData() {
+  setInterval(() => {
+    // Fluctuate AQI
+    const aqi = 28 + Math.round((Math.random() - 0.5) * 8);
+    const noise = 42 + Math.round((Math.random() - 0.5) * 10);
+    const pollen = 12 + Math.round((Math.random() - 0.5) * 4);
+
+    document.getElementById('aqiValue').textContent = aqi;
+    document.getElementById('noiseValue').textContent = noise;
+    document.getElementById('pollenValue').textContent = pollen;
+    document.getElementById('liveNoise').textContent = noise;
+
+    document.getElementById('aqiBar').style.width = Math.min(aqi, 100) + '%';
+    document.getElementById('noiseBar').style.width = Math.min(noise, 100) + '%';
+
+    // Update noise bars animation speed
+    const noiseBars = document.querySelectorAll('.noise-bar');
+    noiseBars.forEach(b => {
+      b.style.animationDuration = (0.3 + Math.random() * 0.4) + 's';
+    });
+  }, 3000);
+}
+
+// ── TREND CHART ──
+function drawTrendChart() {
+  const canvas = document.getElementById('trendChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const data = [35, 42, 55, 48, 62, 44, 28];
+  const labels = ['6h', '5h', '4h', '3h', '2h', '1h', 'Now'];
+
+  ctx.clearRect(0, 0, W, H);
+
+  const maxV = Math.max(...data);
+  const pts = data.map((v, i) => [i * (W / (data.length - 1)), H - (v / maxV) * (H - 10) - 5]);
+
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], H);
+  pts.forEach(([x, y]) => ctx.lineTo(x, y));
+  ctx.lineTo(pts[pts.length-1][0], H);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(39,174,96,0.12)';
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+  ctx.strokeStyle = '#27AE60';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Dots
+  pts.forEach(([x, y], i) => {
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = i === pts.length - 1 ? '#0F2E1B' : '#27AE60';
+    ctx.fill();
+  });
+
+  // Labels
+  ctx.fillStyle = 'rgba(15,46,27,0.45)';
+  ctx.font = '8px Manrope';
+  ctx.textAlign = 'center';
+  labels.forEach((l, i) => ctx.fillText(l, pts[i][0], H - 1));
+}
+
+// ── STREAK DAYS ──
+function buildStreak() {
+  const wrap = document.getElementById('streakDays');
+  const days = ['M','T','W','T','F','S','S'];
+  days.forEach((d, i) => {
+    const el = document.createElement('div');
+    el.style.cssText = `flex:1;text-align:center;font-size:0.65rem;font-weight:700;`;
+    el.innerHTML = `<div style="width:28px;height:28px;border-radius:50%;background:${i < 7 ? 'rgba(127,255,160,0.3)' : 'rgba(255,255,255,0.1)'};display:flex;align-items:center;justify-content:center;margin:0 auto 4px;font-size:10px;">${i < 7 ? '✓' : ''}</div><div style="opacity:0.7">${d}</div>`;
+    wrap.appendChild(el);
+  });
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  // Draw initial route
+  setTimeout(() => drawRoute(0), 300);
+
+  // Trend chart
+  setTimeout(drawTrendChart, 100);
+
+  // Build streak
+  buildStreak();
+
+  // Start live simulation
+  simulateLiveData();
+
+  // Initial toast
+  setTimeout(() => showToast('🌿 EcoRoute active — Environmental data live', 'success'), 800);
+  setTimeout(() => showToast('⚠️ High AQI zone detected 0.4mi NE', 'warning'), 2500);
+
+  // Score animation
+  updateScore(82, 'Exceptional Air Quality', 2.4);
+});
+
+// Close modal on backdrop click
+document.getElementById('searchModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSearchModal();
+});
+</script>
+</body>
+</html>
