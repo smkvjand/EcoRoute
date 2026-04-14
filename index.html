@@ -1,219 +1,252 @@
-Ecoroute · HTML
-Copy
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>EcoRoute — IIITM Gwalior</title>
+<title>EcoRoute — Live Navigation</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;0,9..40,900;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
 <style>
-:root{--pr:#0F2E1B;--safe:#27AE60;--mod:#E67E22;--haz:#C0392B;--bg:#F0F4F0;--sf:#F8FAF8;--card:rgba(255,255,255,0.82);--mu:rgba(15,46,27,0.5);--sh:0 4px 24px rgba(15,46,27,0.1);--shl:0 8px 40px rgba(15,46,27,0.14);}
+:root{
+  --pr:#0F2E1B;--safe:#1A9E4A;--mod:#D4860A;--haz:#C0392B;
+  --bg:#F0F4F0;--sf:#F8FAF8;--card:rgba(255,255,255,0.85);
+  --border:rgba(15,46,27,0.1);--text:#191C1B;--muted:rgba(15,46,27,0.5);
+  --sh:0 4px 24px rgba(15,46,27,0.09);--shl:0 8px 40px rgba(15,46,27,0.13);
+  --radius:14px;--r-sm:9px;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--pr);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
-.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24;}
- 
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 22;}
+
 /* TOPBAR */
-.tb{height:60px;background:rgba(248,250,248,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(15,46,27,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:1000;flex-shrink:0;box-shadow:0 1px 10px rgba(15,46,27,0.06);}
-.logo{display:flex;align-items:center;gap:9px;}
-.lm{width:32px;height:32px;background:var(--pr);border-radius:9px;display:flex;align-items:center;justify-content:center;}
-.lm span{color:#fff;font-size:17px;}
-.logo h1{font-size:1.05rem;font-weight:900;letter-spacing:-0.03em;}
-.logo small{font-size:0.58rem;font-weight:600;opacity:0.45;margin-left:3px;}
-.srch{display:flex;align-items:center;gap:8px;background:rgba(15,46,27,0.06);border-radius:999px;padding:7px 14px;width:280px;}
-.srch input{border:none;background:transparent;font-family:'Manrope',sans-serif;font-size:0.8rem;color:var(--pr);outline:none;flex:1;}
-.srch input::placeholder{color:var(--mu);}
-.srch span{font-size:16px;color:var(--mu);}
+.tb{height:58px;background:rgba(248,250,248,0.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:1000;flex-shrink:0;box-shadow:0 1px 10px rgba(15,46,27,0.06);}
+.logo{display:flex;align-items:center;gap:10px;}
+.lm{width:34px;height:34px;background:var(--pr);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.lm span{color:#fff;font-size:18px;}
+.logo h1{font-size:1rem;font-weight:900;letter-spacing:-0.04em;color:var(--text);}
+.logo small{font-size:0.58rem;font-weight:500;color:var(--muted);margin-left:2px;}
+
+/* SEARCH BAR */
+.srch-wrap{position:relative;flex:1;max-width:520px;margin:0 14px;}
+.srch{display:flex;align-items:center;gap:8px;background:rgba(15,46,27,0.06);border:1px solid rgba(15,46,27,0.12);border-radius:999px;padding:7px 14px;width:100%;transition:all 0.2s;}
+.srch:focus-within{background:rgba(15,46,27,0.08);border-color:var(--safe);box-shadow:0 0 0 3px rgba(26,158,74,0.12);}
+.srch input{border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--text);outline:none;flex:1;}
+.srch input::placeholder{color:var(--muted);}
+.srch span{font-size:16px;color:var(--muted);}
+.srch .srch-btn{font-size:16px;color:var(--safe);cursor:pointer;background:none;border:none;display:flex;align-items:center;transition:transform 0.15s;}
+.srch .srch-btn:hover{transform:scale(1.15);}
+.suggest-box{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--sf);border:1px solid var(--border);border-radius:12px;z-index:9999;overflow:hidden;box-shadow:var(--shl);display:none;max-height:220px;overflow-y:auto;}
+.suggest-box.show{display:block;}
+.sug-item{padding:9px 14px;font-size:0.78rem;cursor:pointer;border-bottom:1px solid rgba(15,46,27,0.06);display:flex;align-items:center;gap:8px;transition:background 0.12s;color:var(--text);}
+.sug-item:last-child{border-bottom:none;}
+.sug-item:hover{background:rgba(26,158,74,0.07);}
+.sug-item span{font-size:14px;color:var(--muted);}
+
 .acts{display:flex;gap:6px;}
-.ib{width:34px;height:34px;border:none;background:transparent;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pr);transition:background .15s;}
+.ib{width:34px;height:34px;border:none;background:transparent;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text);transition:background .15s;}
 .ib:hover{background:rgba(15,46,27,0.07);}
 .ib span{font-size:18px;}
- 
+
 /* LAYOUT */
 .main{display:flex;flex:1;overflow:hidden;}
- 
+
 /* SIDEBAR */
-.sb{width:292px;flex-shrink:0;background:var(--sf);border-right:1px solid rgba(15,46,27,0.07);display:flex;flex-direction:column;overflow:hidden;}
-.tabs{display:flex;border-bottom:1px solid rgba(15,46,27,0.07);}
-.tbt{flex:1;padding:9px 3px 7px;border:none;background:transparent;font-family:'Manrope',sans-serif;font-size:0.56rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s;position:relative;}
+.sb{width:295px;flex-shrink:0;background:var(--sf);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.tabs{display:flex;border-bottom:1px solid var(--border);}
+.tbt{flex:1;padding:9px 3px 7px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:0.52rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s;position:relative;}
 .tbt span.material-symbols-outlined{font-size:18px;}
 .tbt.on{color:var(--pr);}
 .tbt.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--pr);border-radius:2px;}
- 
-.pnls{flex:1;overflow-y:auto;padding:13px 12px;display:flex;flex-direction:column;gap:11px;}
+
+.pnls{flex:1;overflow-y:auto;padding:12px 11px;display:flex;flex-direction:column;gap:10px;}
 .pnls::-webkit-scrollbar{width:3px;}
 .pnls::-webkit-scrollbar-thumb{background:rgba(15,46,27,0.15);border-radius:3px;}
-.pnl{display:none;flex-direction:column;gap:11px;}
+.pnl{display:none;flex-direction:column;gap:10px;}
 .pnl.on{display:flex;}
- 
-.sl{font-size:0.58rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);}
- 
+.sl{font-size:0.54rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+
+/* Route input panel */
+.route-input-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:11px;display:flex;flex-direction:column;gap:8px;}
+.ri-row{display:flex;align-items:center;gap:8px;background:rgba(15,46,27,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;position:relative;}
+.ri-row.focus-in{border-color:var(--safe);box-shadow:0 0 0 2px rgba(26,158,74,0.1);}
+.ri-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.ri-dot.start{background:var(--safe);}
+.ri-dot.end{background:var(--haz);}
+.ri-input{border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:0.76rem;color:var(--text);outline:none;flex:1;width:100%;}
+.ri-input::placeholder{color:var(--muted);}
+.ri-sug{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--sf);border:1px solid var(--border);border-radius:10px;z-index:9999;overflow:hidden;box-shadow:var(--shl);display:none;max-height:160px;overflow-y:auto;}
+.ri-sug.show{display:block;}
+.ri-row:hover .ri-sug{display:block;}
+.go-btn{width:100%;padding:9px;border:none;border-radius:var(--r-sm);background:var(--pr);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:opacity .15s,transform .15s;}
+.go-btn:hover{opacity:0.9;}
+.go-btn:active{transform:scale(0.98);}
+.go-btn span{font-size:15px;}
+
 /* Score card */
-.sc{background:var(--pr);border-radius:17px;padding:15px;color:#fff;display:flex;align-items:center;gap:13px;}
-.rw{position:relative;width:66px;height:66px;flex-shrink:0;}
+.sc{background:linear-gradient(135deg,rgba(26,158,74,0.12),rgba(26,158,74,0.04));border:1px solid rgba(26,158,74,0.2);border-radius:var(--radius);padding:14px;display:flex;align-items:center;gap:12px;}
+.rw{position:relative;width:64px;height:64px;flex-shrink:0;}
 .rw svg{transform:rotate(-90deg);}
 .rn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.rn .rv{font-size:1.3rem;font-weight:900;line-height:1;}
-.rn .rl{font-size:.48rem;font-weight:700;opacity:.6;letter-spacing:.07em;}
-.si h2{font-size:.83rem;font-weight:800;}
-.si p{font-size:.68rem;opacity:.65;margin-top:2px;}
-.chips{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
-.ch{background:rgba(255,255,255,.13);border-radius:999px;padding:2px 8px;font-size:.58rem;font-weight:700;}
- 
-/* Modes */
+.rn .rv{font-size:1.3rem;font-weight:900;line-height:1;color:var(--pr);}
+.rn .rl{font-size:.44rem;font-weight:700;color:var(--muted);letter-spacing:.07em;}
+.si h2{font-size:.82rem;font-weight:800;color:var(--text);}
+.si p{font-size:.67rem;color:var(--muted);margin-top:2px;}
+.chips{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
+.ch{background:rgba(26,158,74,0.1);border:1px solid rgba(26,158,74,0.2);border-radius:999px;padding:2px 8px;font-size:.55rem;font-weight:700;color:var(--safe);}
+
+/* Mode buttons */
 .mg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
-.mb{padding:8px 3px 6px;border-radius:10px;border:1.5px solid rgba(15,46,27,.1);background:transparent;font-family:'Manrope',sans-serif;font-size:.58rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--pr);transition:all .15s;}
+.mb{padding:7px 3px 6px;border-radius:9px;border:1px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:.55rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);transition:all .15s;}
 .mb span{font-size:16px;}
 .mb.on{background:var(--pr);color:#fff;border-color:var(--pr);}
- 
-/* Metrics grid */
+
+/* Metrics */
 .mxg{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-.mx{background:var(--card);border:1px solid rgba(15,46,27,.07);border-radius:13px;padding:11px;backdrop-filter:blur(8px);}
-.mxt{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.mx{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;backdrop-filter:blur(8px);}
+.mxt{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .mxi{font-size:15px;}
-.bx{font-size:.52rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:999px;}
-.sb-g{background:rgba(39,174,96,.12);color:var(--safe);}
-.sb-m{background:rgba(230,126,34,.12);color:var(--mod);}
+.bx{font-size:.5rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 5px;border-radius:999px;}
+.sb-g{background:rgba(26,158,74,.12);color:var(--safe);}
+.sb-m{background:rgba(212,134,10,.12);color:var(--mod);}
 .sb-h{background:rgba(192,57,43,.12);color:var(--haz);}
-.mv{font-size:1.25rem;font-weight:900;color:var(--pr);letter-spacing:-.04em;}
-.mu2{font-size:.58rem;font-weight:600;color:var(--mu);}
-.mn{font-size:.62rem;color:var(--mu);margin-top:1px;}
-.mb2{height:3px;background:rgba(15,46,27,.08);border-radius:3px;margin-top:6px;overflow:hidden;}
+.mv{font-size:1.2rem;font-weight:900;color:var(--pr);letter-spacing:-.04em;font-family:'DM Mono',monospace;}
+.mu2{font-size:.55rem;font-weight:600;color:var(--muted);}
+.mb2{height:3px;background:rgba(15,46,27,0.08);border-radius:3px;margin-top:6px;overflow:hidden;}
 .mbf{height:100%;border-radius:3px;transition:width 1.2s ease;}
- 
+
+/* Route cards */
+.rc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.rc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.rc.eco::before{background:var(--safe);}
+.rc.fast::before{background:#2980B9;}
+.rc.alt::before{background:#8E44AD;}
+.rc.on{border-color:rgba(26,158,74,0.3);background:rgba(26,158,74,0.06);}
+.rc:hover{border-color:rgba(15,46,27,0.18);transform:translateX(2px);box-shadow:var(--sh);}
+.rr{display:flex;align-items:center;gap:9px;}
+.ri{width:30px;height:30px;border-radius:8px;background:rgba(15,46,27,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ri span{font-size:14px;color:var(--pr);}
+.rinf{flex:1;}
+.rnm{font-size:.78rem;font-weight:700;color:var(--text);}
+.rmt{font-size:.6rem;color:var(--muted);margin-top:1px;font-family:'DM Mono',monospace;}
+.rsc{text-align:right;}
+.rpts{font-size:.9rem;font-weight:900;color:var(--safe);}
+.rpl{font-size:.45rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+.rtgs{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
+.tg{font-size:.5rem;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:999px;text-transform:uppercase;}
+.tg-g{background:rgba(26,158,74,.1);color:var(--safe);}
+.tg-b{background:rgba(41,128,185,.1);color:#2980B9;}
+.tg-r{background:rgba(192,57,43,.1);color:var(--haz);}
+.tg-p{background:rgba(142,68,173,.1);color:#8E44AD;}
+.no-route{font-size:.75rem;color:var(--muted);text-align:center;padding:16px;background:var(--card);border-radius:12px;border:1px dashed var(--border);}
+
 /* Toggle */
-.tr{background:var(--card);border-radius:11px;padding:10px 11px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(15,46,27,.06);}
-.ti h4{font-size:.76rem;font-weight:700;}
-.ti p{font-size:.62rem;color:var(--mu);}
-.sw{position:relative;width:38px;height:21px;cursor:pointer;}
+.tr{background:var(--card);border-radius:10px;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);}
+.ti h4{font-size:.74rem;font-weight:700;color:var(--text);}
+.ti p{font-size:.6rem;color:var(--muted);}
+.sw{position:relative;width:36px;height:20px;cursor:pointer;}
 .sw input{opacity:0;width:0;height:0;position:absolute;}
 .sw-t{position:absolute;inset:0;background:rgba(15,46,27,.15);border-radius:999px;transition:background .22s;}
-.sw-k{position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .22s;}
+.sw-k{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.15);transition:transform .22s;}
 .sw input:checked~.sw-t{background:var(--safe);}
-.sw input:checked~.sw-k{transform:translateX(17px);}
- 
-/* Route cards */
-.rc{background:var(--card);border:1.5px solid rgba(255,255,255,.7);border-radius:13px;padding:11px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
-.rc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--safe);border-radius:3px 0 0 3px;}
-.rc.on{border-color:rgba(15,46,27,.22);box-shadow:0 0 0 2px rgba(15,46,27,.09);}
-.rc:hover{box-shadow:var(--sh);transform:translateX(2px);}
-.rr{display:flex;align-items:center;gap:9px;}
-.ri{width:32px;height:32px;border-radius:9px;background:rgba(15,46,27,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ri span{font-size:15px;color:var(--pr);}
-.rinf{flex:1;}
-.rnm{font-size:.8rem;font-weight:700;}
-.rmt{font-size:.62rem;color:var(--mu);margin-top:1px;}
-.rsc{text-align:right;}
-.rpts{font-size:.95rem;font-weight:900;color:var(--safe);}
-.rpl{font-size:.48rem;font-weight:800;color:var(--mu);letter-spacing:.06em;text-transform:uppercase;}
-.rtgs{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
-.tg{font-size:.53rem;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:999px;text-transform:uppercase;}
-.tg-g{background:rgba(39,174,96,.1);color:var(--safe);}
-.tg-b{background:rgba(41,128,185,.1);color:#2980B9;}
-.tg-p{background:rgba(142,68,173,.1);color:#8E44AD;}
- 
+.sw input:checked~.sw-k{transform:translateX(16px);}
+
 /* CTA */
-.ct{width:100%;padding:12px;border:none;border-radius:999px;background:var(--pr);color:#fff;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s,transform .15s;box-shadow:0 4px 18px rgba(15,46,27,.22);}
+.ct{width:100%;padding:11px;border:none;border-radius:999px;background:var(--pr);color:#fff;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s,transform .15s;box-shadow:0 4px 16px rgba(15,46,27,0.2);}
 .ct:hover{opacity:.9;}
 .ct:active{transform:scale(.98);}
 .ct span{font-size:16px;}
- 
+
 /* Alert items */
-.ai{background:var(--card);border-radius:11px;padding:10px 11px;display:flex;gap:9px;align-items:flex-start;border:1px solid rgba(15,46,27,.06);}
+.ai{background:var(--card);border-radius:10px;padding:9px 11px;display:flex;gap:9px;align-items:flex-start;border:1px solid var(--border);}
 .ad{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
-.ad.r{background:var(--haz);box-shadow:0 0 5px rgba(192,57,43,.5);}
-.ad.a{background:var(--mod);box-shadow:0 0 5px rgba(230,126,34,.5);}
-.ad.g{background:var(--safe);box-shadow:0 0 5px rgba(39,174,96,.4);}
-.at h4{font-size:.74rem;font-weight:700;}
-.at p{font-size:.62rem;color:var(--mu);margin-top:1px;}
-.atm{font-size:.56rem;color:var(--mu);margin-top:2px;}
- 
+.ad.r{background:var(--haz);box-shadow:0 0 6px rgba(192,57,43,.5);}
+.ad.a{background:var(--mod);box-shadow:0 0 6px rgba(212,134,10,.4);}
+.ad.g{background:var(--safe);box-shadow:0 0 6px rgba(26,158,74,.35);}
+.at h4{font-size:.72rem;font-weight:700;color:var(--text);}
+.at p{font-size:.6rem;color:var(--muted);margin-top:1px;}
+.atm{font-size:.54rem;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace;}
+
 /* Impact */
 .ig{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-.is{background:var(--card);border-radius:11px;padding:10px 6px;text-align:center;border:1px solid rgba(15,46,27,.06);}
-.is .iv{font-size:1.2rem;font-weight:900;letter-spacing:-.03em;}
-.is .iu{font-size:.56rem;font-weight:700;color:var(--mu);}
-.is .il{font-size:.6rem;color:var(--mu);margin-top:1px;}
+.is{background:var(--card);border-radius:10px;padding:10px 6px;text-align:center;border:1px solid var(--border);}
+.is .iv{font-size:1.2rem;font-weight:900;letter-spacing:-.03em;font-family:'DM Mono',monospace;color:var(--pr);}
+.is .iu{font-size:.54rem;font-weight:700;color:var(--muted);}
+.is .il{font-size:.58rem;color:var(--muted);margin-top:1px;}
 .pr{display:flex;flex-direction:column;gap:4px;}
 .prl{display:flex;justify-content:space-between;}
-.prla{font-size:.7rem;font-weight:600;}
-.prlb{font-size:.62rem;font-weight:700;color:var(--mu);}
-.prt{height:5px;background:rgba(15,46,27,.08);border-radius:5px;overflow:hidden;}
+.prla{font-size:.68rem;font-weight:600;color:var(--text);}
+.prlb{font-size:.6rem;font-weight:700;color:var(--muted);font-family:'DM Mono',monospace;}
+.prt{height:4px;background:rgba(15,46,27,.08);border-radius:5px;overflow:hidden;}
 .prf{height:100%;border-radius:5px;background:var(--safe);transition:width 1.2s ease;}
- 
-/* Loading */
-.ld{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--mu);padding:6px 0;}
-.sp{width:13px;height:13px;border:2px solid rgba(15,46,27,.15);border-top-color:var(--pr);border-radius:50%;animation:spin .8s linear infinite;}
+
+.ld{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--muted);padding:6px 0;}
+.sp{width:12px;height:12px;border:2px solid rgba(15,46,27,.12);border-top-color:var(--pr);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg)}}
- 
-/* Mic notice */
-.mic-n{background:rgba(230,126,34,.08);border:1px solid rgba(230,126,34,.2);border-radius:10px;padding:9px;font-size:.67rem;color:var(--mod);font-weight:600;text-align:center;}
-.mic-btn{margin-top:6px;padding:4px 11px;border-radius:999px;border:none;background:var(--mod);color:#fff;font-family:'Manrope',sans-serif;font-size:.63rem;font-weight:800;cursor:pointer;}
- 
-.sdot-row{display:flex;align-items:center;gap:6px;font-size:.66rem;font-weight:600;}
-.sdot{width:7px;height:7px;border-radius:50%;}
-.sdot.live{background:var(--safe);box-shadow:0 0 5px rgba(39,174,96,.5);animation:blink 2s ease-in-out infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
- 
+
 /* MAP */
 .mw{flex:1;position:relative;}
 #map{width:100%;height:100%;}
- 
+
 /* Map overlays */
 .otl{position:absolute;top:12px;left:12px;z-index:500;display:flex;flex-direction:column;gap:7px;}
 .otr{position:absolute;top:12px;right:12px;z-index:500;display:flex;flex-direction:column;gap:7px;}
-.obl{position:absolute;bottom:12px;left:12px;z-index:500;}
-.gc{background:rgba(248,250,248,.93);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.65);border-radius:13px;box-shadow:var(--sh);padding:9px 12px;}
- 
+.obl{position:absolute;bottom:16px;left:12px;z-index:500;}
+.gc{background:rgba(248,250,248,0.93);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;box-shadow:var(--sh);}
+
+/* AQI badge on map */
+.aqi-badge{background:rgba(248,250,248,0.94);border:1px solid var(--border);border-radius:10px;padding:9px 13px;display:flex;flex-direction:column;gap:2px;}
+.aqi-badge .ab-val{font-size:1.5rem;font-weight:900;font-family:'DM Mono',monospace;line-height:1;}
+.aqi-badge .ab-lbl{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);}
+.aqi-badge .ab-loc{font-size:.62rem;color:var(--muted);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
 /* Noise widget */
-.nw{display:flex;align-items:center;gap:9px;}
-.nbs{display:flex;align-items:flex-end;gap:2px;height:17px;}
+.nw{display:flex;align-items:center;gap:9px;padding:9px 12px;}
+.nbs{display:flex;align-items:flex-end;gap:2px;height:16px;}
 .nb{width:3px;background:var(--safe);border-radius:2px;animation:np .5s ease-in-out infinite;}
-.nb:nth-child(1){height:7px;animation-delay:0s}
-.nb:nth-child(2){height:13px;animation-delay:.1s}
-.nb:nth-child(3){height:9px;animation-delay:.05s}
-.nb:nth-child(4){height:15px;animation-delay:.15s}
-.nb:nth-child(5){height:6px;animation-delay:.08s}
-@keyframes np{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:.5;transform:scaleY(.5)}}
-.nv{font-size:.95rem;font-weight:900;color:var(--pr);}
-.nl{font-size:.56rem;color:var(--mu);font-weight:600;}
- 
+.nb:nth-child(1){height:6px;animation-delay:0s}
+.nb:nth-child(2){height:12px;animation-delay:.1s}
+.nb:nth-child(3){height:8px;animation-delay:.05s}
+.nb:nth-child(4){height:14px;animation-delay:.15s}
+.nb:nth-child(5){height:5px;animation-delay:.08s}
+@keyframes np{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:.4;transform:scaleY(.4)}}
+.nv{font-size:.95rem;font-weight:900;font-family:'DM Mono',monospace;}
+.nl{font-size:.54rem;color:var(--muted);font-weight:600;}
+
 /* Layer ctrl */
-.lc{display:flex;flex-direction:column;gap:2px;}
-.lb{width:39px;height:39px;border:none;background:transparent;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--pr);transition:all .15s;position:relative;}
+.lc{display:flex;flex-direction:column;gap:2px;padding:5px;}
+.lb{width:38px;height:38px;border:none;background:transparent;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;position:relative;}
 .lb span{font-size:18px;}
-.lb:hover{background:rgba(15,46,27,.07);}
+.lb:hover{background:rgba(15,46,27,.07);color:var(--pr);}
 .lb.on{background:var(--pr)!important;color:#fff!important;}
-.lbt{position:absolute;right:calc(100%+7px);top:50%;transform:translateY(-50%);background:rgba(15,46,27,.88);color:#fff;font-size:.58rem;font-weight:700;padding:3px 7px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;}
+.lbt{position:absolute;right:calc(100%+7px);top:50%;transform:translateY(-50%);background:rgba(15,46,27,.9);border:1px solid transparent;color:#fff;font-size:.58rem;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;}
 .lb:hover .lbt{opacity:1;}
- 
-/* Pollution alert */
-.pa{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(248,250,248,.95);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.65);border-radius:17px;box-shadow:var(--shl);padding:13px 17px;display:flex;gap:11px;align-items:center;min-width:275px;max-width:380px;animation:su .4s cubic-bezier(.34,1.56,.64,1);transition:opacity .3s;}
+
+/* Pollution alert floating */
+.pa{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(248,250,248,0.96);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.7);border-radius:16px;box-shadow:var(--shl);padding:12px 16px;display:flex;gap:11px;align-items:center;min-width:280px;max-width:400px;animation:su .4s cubic-bezier(.34,1.56,.64,1);transition:opacity .3s;}
 @keyframes su{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
-.pi{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pi{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .pi.r{background:rgba(192,57,43,.1);color:var(--haz);}
-.pi.a{background:rgba(230,126,34,.1);color:var(--mod);}
-.pi.g{background:rgba(39,174,96,.1);color:var(--safe);}
+.pi.a{background:rgba(212,134,10,.1);color:var(--mod);}
+.pi.g{background:rgba(26,158,74,.1);color:var(--safe);}
 .pi span{font-size:19px;}
-.pt h3{font-size:.83rem;font-weight:800;}
-.pt p{font-size:.66rem;color:var(--mu);margin-top:2px;}
-.ab{display:inline-flex;align-items:center;gap:3px;margin-top:6px;background:var(--pr);color:#fff;border:none;border-radius:999px;padding:4px 10px;font-family:'Manrope',sans-serif;font-size:.62rem;font-weight:800;cursor:pointer;}
-.ab span{font-size:12px;}
-.pc{position:absolute;top:7px;right:7px;border:none;background:transparent;color:var(--mu);cursor:pointer;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.pt h3{font-size:.82rem;font-weight:800;color:var(--text);}
+.pt p{font-size:.64rem;color:var(--muted);margin-top:2px;}
+.ab{display:inline-flex;align-items:center;gap:3px;margin-top:6px;background:var(--pr);color:#fff;border:none;border-radius:999px;padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.6rem;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.ab:hover{opacity:.88;}
+.ab span{font-size:11px;}
+.pc{position:absolute;top:6px;right:6px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;}
 .pc:hover{background:rgba(15,46,27,.07);}
- 
+
 /* Legend */
-.leg{font-size:.67rem;}
-.leg-t{font-size:.56rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px;}
-.leg-i{display:flex;align-items:center;gap:6px;font-weight:600;margin-bottom:3px;}
-.ld2{width:9px;height:9px;border-radius:50%;}
- 
+.leg{font-size:.67rem;padding:9px 12px;}
+.leg-t{font-size:.54rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.leg-i{display:flex;align-items:center;gap:6px;font-weight:600;margin-bottom:3px;font-size:.64rem;color:var(--text);}
+.ld2{width:10px;height:10px;border-radius:3px;}
+
 /* Toast */
-.tw{position:fixed;top:66px;right:14px;z-index:2000;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
-.tst{background:var(--pr);color:#fff;border-radius:11px;padding:9px 14px;font-size:.72rem;font-weight:600;display:flex;align-items:center;gap:7px;box-shadow:var(--shl);animation:tin .35s cubic-bezier(.34,1.56,.64,1);pointer-events:all;}
+.tw{position:fixed;top:64px;right:14px;z-index:3000;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.tst{background:var(--pr);color:#fff;border-radius:10px;padding:8px 13px;font-size:.72rem;font-weight:600;display:flex;align-items:center;gap:7px;box-shadow:var(--shl);animation:tin .35s cubic-bezier(.34,1.56,.64,1);pointer-events:all;}
 .tst span{font-size:15px;}
 .tst.success{background:var(--safe);}
 .tst.warning{background:var(--mod);}
@@ -221,115 +254,158 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--pr);heigh
 @keyframes tin{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
 @keyframes tout{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(22px)}}
 .tst.out{animation:tout .3s ease forwards;}
+
+/* Proximity alert banner */
+.prox-alert{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(248,250,248,0.97);border:1.5px solid;border-radius:12px;padding:10px 16px;min-width:260px;max-width:360px;display:none;box-shadow:var(--shl);animation:su .4s cubic-bezier(.34,1.56,.64,1);}
+.prox-alert.show{display:flex;align-items:center;gap:10px;}
+.prox-alert.danger{border-color:rgba(192,57,43,.5);}
+.prox-alert.warning{border-color:rgba(212,134,10,.5);}
+.pa-icon{font-size:22px;}
+.pa-text{flex:1;}
+.pa-text strong{font-size:.78rem;display:block;color:var(--text);}
+.pa-text span{font-size:.64rem;color:var(--muted);}
+.pa-close{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;display:flex;align-items:center;}
+
+/* Nav controls */
+.nav-panel{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);z-index:600;display:flex;gap:8px;align-items:center;}
+#navBtn{padding:10px 22px;border:none;border-radius:999px;background:var(--pr);color:#fff;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:var(--shl);transition:background .15s;}
+#navBtn span{font-size:16px;}
+#navBtn.active{background:var(--haz);}
+
+/* Loading skeleton */
+.skel{background:linear-gradient(90deg,rgba(15,46,27,0.05) 25%,rgba(15,46,27,0.1) 50%,rgba(15,46,27,0.05) 75%);background-size:200% 100%;animation:sk 1.5s infinite;border-radius:8px;height:70px;}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.sdot-row{display:flex;align-items:center;gap:6px;font-size:.64rem;font-weight:600;color:var(--muted);}
+.sdot{width:7px;height:7px;border-radius:50%;}
+.sdot.live{background:var(--safe);box-shadow:0 0 5px rgba(26,158,74,.5);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Route loading indicator */
+.route-ld{font-size:.72rem;color:var(--muted);text-align:center;padding:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+
+/* Leaflet popup light */
+.leaflet-popup-content-wrapper{background:rgba(248,250,248,0.98)!important;border:1px solid rgba(15,46,27,.1)!important;border-radius:12px!important;color:var(--text)!important;box-shadow:var(--shl)!important;font-family:'DM Sans',sans-serif!important;}
+.leaflet-popup-tip{background:rgba(248,250,248,0.98)!important;}
+.leaflet-popup-content{font-size:.76rem!important;font-weight:600!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;}
 </style>
 </head>
 <body>
- 
+
 <header class="tb">
   <div class="logo">
     <div class="lm"><span class="material-symbols-outlined">eco</span></div>
-    <h1>EcoRoute<small>IIITM Gwalior</small></h1>
+    <h1>EcoRoute<small> · Live</small></h1>
   </div>
-  <div class="srch">
-    <span class="material-symbols-outlined">search</span>
-    <input id="sq" placeholder="Search destination in Gwalior…" onkeydown="if(event.key==='Enter')doSearch()"/>
-    <span class="material-symbols-outlined" style="cursor:pointer" onclick="doSearch()">near_me</span>
+  <div class="srch-wrap">
+    <div class="srch">
+      <span class="material-symbols-outlined">search</span>
+      <input id="mainSearch" placeholder="Search any place in the world…" autocomplete="off" oninput="onMainSearch(this.value)" onkeydown="if(event.key==='Enter')doMainSearch()"/>
+      <button class="srch-btn" onclick="doMainSearch()"><span class="material-symbols-outlined">near_me</span></button>
+    </div>
+    <div class="suggest-box" id="mainSuggest"></div>
   </div>
   <div class="acts">
-    <button class="ib" onclick="showPane('alerts')"><span class="material-symbols-outlined">notifications</span></button>
-    <button class="ib" onclick="locateMe()"><span class="material-symbols-outlined">my_location</span></button>
+    <button class="ib" title="My Location" onclick="locateMe()"><span class="material-symbols-outlined">my_location</span></button>
+    <button class="ib" title="Alerts" onclick="showPane('alerts')"><span class="material-symbols-outlined">notifications</span></button>
   </div>
 </header>
- 
+
 <div class="main">
-  <!-- SIDEBAR -->
   <aside class="sb">
     <div class="tabs">
-      <button class="tbt on" id="tb-route" onclick="showPane('route')"><span class="material-symbols-outlined">conversion_path</span>Route</button>
+      <button class="tbt on" id="tb-route" onclick="showPane('route')"><span class="material-symbols-outlined">alt_route</span>Route</button>
       <button class="tbt" id="tb-env" onclick="showPane('env')"><span class="material-symbols-outlined">air</span>Air</button>
       <button class="tbt" id="tb-alerts" onclick="showPane('alerts')"><span class="material-symbols-outlined">warning</span>Alerts</button>
       <button class="tbt" id="tb-impact" onclick="showPane('impact')"><span class="material-symbols-outlined">eco</span>Impact</button>
     </div>
     <div class="pnls">
- 
+
       <!-- ROUTE -->
       <div class="pnl on" id="pnl-route">
         <div class="sc">
           <div class="rw">
             <svg viewBox="0 0 66 66" width="66" height="66">
-              <circle cx="33" cy="33" r="27" stroke="rgba(255,255,255,.15)" stroke-width="4" fill="none"/>
-              <circle id="sring" cx="33" cy="33" r="27" stroke="#7FFFA0" stroke-width="4" fill="none"
-                stroke-dasharray="170" stroke-dashoffset="43" stroke-linecap="round"/>
+              <circle cx="33" cy="33" r="27" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+              <circle id="sring" cx="33" cy="33" r="27" fill="none" stroke="#1DB954" stroke-width="5" stroke-linecap="round" stroke-dasharray="170" stroke-dashoffset="50"/>
             </svg>
-            <div class="rn"><span class="rv" id="sval">75</span><span class="rl">ECO</span></div>
+            <div class="rn"><span class="rv" id="sval">—</span><span class="rl">ECO</span></div>
           </div>
           <div class="si">
-            <h2 id="slbl">Loading…</h2>
-            <p id="ssub">Fetching live data for Gwalior</p>
-            <div class="chips">
-              <span class="ch" id="cAqi">AQI —</span>
-              <span class="ch" id="cNoise">Noise —</span>
-              <span class="ch" id="cPollen">Pollen —</span>
-            </div>
+            <h2 id="slbl">Calculating…</h2>
+            <p id="ssub">Fetching live data</p>
+            <div class="chips"><span class="ch" id="cAqi">AQI —</span><span class="ch" id="cPollen">Pollen —</span></div>
           </div>
         </div>
- 
-        <div class="sl">Transport Mode</div>
+
+        <div class="sl">Travel Mode</div>
         <div class="mg">
           <button class="mb on" onclick="setMode(this,'walk')"><span class="material-symbols-outlined">directions_walk</span>Walk</button>
           <button class="mb" onclick="setMode(this,'bike')"><span class="material-symbols-outlined">directions_bike</span>Bike</button>
           <button class="mb" onclick="setMode(this,'bus')"><span class="material-symbols-outlined">directions_bus</span>Bus</button>
-          <button class="mb" onclick="setMode(this,'car')"><span class="material-symbols-outlined">directions_car</span>Drive</button>
+          <button class="mb" onclick="setMode(this,'car')"><span class="material-symbols-outlined">directions_car</span>Car</button>
         </div>
- 
-        <div class="sl">Preferences</div>
-        <div class="tr"><div class="ti"><h4>🌸 Pollen Avoidance</h4><p>Skip high-pollen zones</p></div><label class="sw"><input type="checkbox" id="tPollen" onchange="reRank()"/><div class="sw-t"></div><div class="sw-k"></div></label></div>
-        <div class="tr"><div class="ti"><h4>🌫️ AQI Priority</h4><p>Prefer cleaner air paths</p></div><label class="sw"><input type="checkbox" id="tAqi" checked onchange="reRank()"/><div class="sw-t"></div><div class="sw-k"></div></label></div>
-        <div class="tr"><div class="ti"><h4>🔇 Noise Filter</h4><p>Avoid noisy roads</p></div><label class="sw"><input type="checkbox" id="tNoise" onchange="reRank()"/><div class="sw-t"></div><div class="sw-k"></div></label></div>
- 
+
+        <div class="sl">Route Finder</div>
+        <div class="route-input-box">
+          <div class="ri-row" id="fromRow">
+            <div class="ri-dot start"></div>
+            <input class="ri-input" id="fromInput" placeholder="From: your location or search…" autocomplete="off" oninput="onFromSearch(this.value)" onfocus="this.parentElement.classList.add('focus-in')" onblur="blurFrom()"/>
+            <div class="ri-sug" id="fromSuggest"></div>
+          </div>
+          <div class="ri-row" id="toRow">
+            <div class="ri-dot end"></div>
+            <input class="ri-input" id="toInput" placeholder="To: destination anywhere…" autocomplete="off" oninput="onToSearch(this.value)" onfocus="this.parentElement.classList.add('focus-in')" onblur="blurTo()"/>
+            <div class="ri-sug" id="toSuggest"></div>
+          </div>
+          <button class="go-btn" onclick="findRoutes()"><span class="material-symbols-outlined">route</span>Find Eco Routes</button>
+        </div>
+
+        <div class="tr">
+          <div class="ti"><h4>🌿 Avoid Pollen</h4><p>Avoid parks and high-pollen zones</p></div>
+          <label class="sw"><input type="checkbox" id="tPollen" checked onchange="reRank()"><div class="sw-t"></div><div class="sw-k"></div></label>
+        </div>
+        <div class="tr">
+          <div class="ti"><h4>💨 Avoid High AQI</h4><p>Route away from pollution hotspots</p></div>
+          <label class="sw"><input type="checkbox" id="tAqi" checked onchange="reRank()"><div class="sw-t"></div><div class="sw-k"></div></label>
+        </div>
+        <div class="tr">
+          <div class="ti"><h4>🔇 Avoid Noise</h4><p>Prefer quieter streets and paths</p></div>
+          <label class="sw"><input type="checkbox" id="tNoise" onchange="reRank()"><div class="sw-t"></div><div class="sw-k"></div></label>
+        </div>
+
         <div class="sl">Recommended Routes</div>
         <div id="rl" style="display:flex;flex-direction:column;gap:8px;">
-          <div class="rc on" onclick="selRoute(this,0)">
-            <div class="rr"><div class="ri"><span class="material-symbols-outlined">park</span></div><div class="rinf"><div class="rnm">Phool Bagh – University Rd</div><div class="rmt">14 min · 1.1 km · Score 91</div></div><div class="rsc"><div class="rpts">+14</div><div class="rpl">Pts</div></div></div>
-            <div class="rtgs"><span class="tg tg-g">Walk</span><span class="tg tg-g">Greenest</span></div>
-          </div>
-          <div class="rc" onclick="selRoute(this,1)">
-            <div class="rr"><div class="ri"><span class="material-symbols-outlined">directions_bike</span></div><div class="rinf"><div class="rnm">Lashkar Canal Path</div><div class="rmt">6 min · 1.8 km · Score 84</div></div><div class="rsc"><div class="rpts">+9</div><div class="rpl">Pts</div></div></div>
-            <div class="rtgs"><span class="tg tg-b">Bike</span><span class="tg tg-g">Fastest</span></div>
-          </div>
-          <div class="rc" onclick="selRoute(this,2)">
-            <div class="rr"><div class="ri"><span class="material-symbols-outlined">directions_bus</span></div><div class="rinf"><div class="rnm">Fort Road Bus Route</div><div class="rmt">9 min · 2.4 km · Score 70</div></div><div class="rsc"><div class="rpts">+5</div><div class="rpl">Pts</div></div></div>
-            <div class="rtgs"><span class="tg tg-p">Transit</span></div>
-          </div>
+          <div class="no-route">Enter a destination above to find eco-optimized routes</div>
         </div>
-        <button class="ct" id="navBtn" onclick="startNav()"><span class="material-symbols-outlined">near_me</span>Start Navigation</button>
+        <button class="ct" id="navBtn2" onclick="startNav()"><span class="material-symbols-outlined">near_me</span>Start Navigation</button>
       </div>
- 
+
       <!-- ENV -->
       <div class="pnl" id="pnl-env">
-        <div class="sl">Live Data — Gwalior</div>
-        <div class="sdot-row"><div class="sdot live"></div>Live · Open-Meteo API (no key needed)</div>
+        <div class="sl">Live Air Quality</div>
+        <div class="sdot-row"><div class="sdot live"></div>Open-Meteo API · Updated live</div>
         <div id="envLd" class="ld"><div class="sp"></div>Fetching real-time air quality…</div>
         <div class="mxg" id="mxg" style="display:none;">
-          <div class="mx"><div class="mxt"><span class="mxi">🌫️</span><span class="bx" id="bAqi">—</span></div><div class="mv" id="mAqi">—</div><div class="mu2">AQI (US)</div><div class="mn">Air Quality Index</div><div class="mb2"><div class="mbf" id="bAqiBar" style="width:0"></div></div></div>
-          <div class="mx"><div class="mxt"><span class="mxi">💨</span><span class="bx" id="bPm25">—</span></div><div class="mv" id="mPm25">—</div><div class="mu2">µg/m³</div><div class="mn">PM2.5</div><div class="mb2"><div class="mbf" id="bPm25Bar" style="width:0"></div></div></div>
-          <div class="mx"><div class="mxt"><span class="mxi">🌫</span><span class="bx" id="bPm10">—</span></div><div class="mv" id="mPm10">—</div><div class="mu2">µg/m³</div><div class="mn">PM10</div><div class="mb2"><div class="mbf" id="bPm10Bar" style="width:0"></div></div></div>
-          <div class="mx"><div class="mxt"><span class="mxi">🧪</span><span class="bx" id="bNo2">—</span></div><div class="mv" id="mNo2">—</div><div class="mu2">µg/m³</div><div class="mn">NO₂</div><div class="mb2"><div class="mbf" id="bNo2Bar" style="width:0"></div></div></div>
-          <div class="mx"><div class="mxt"><span class="mxi">🌳</span><span class="bx" id="bTree">—</span></div><div class="mv" id="mTree">—</div><div class="mu2">index</div><div class="mn">Tree Pollen</div><div class="mb2"><div class="mbf" id="bTreeBar" style="width:0;background:#8E44AD"></div></div></div>
-          <div class="mx"><div class="mxt"><span class="mxi">🌿</span><span class="bx" id="bGrass">—</span></div><div class="mv" id="mGrass">—</div><div class="mu2">index</div><div class="mn">Grass Pollen</div><div class="mb2"><div class="mbf" id="bGrassBar" style="width:0;background:#27AE60"></div></div></div>
-          <div class="mx"><div class="mxt"><span class="mxi">🔊</span><span class="bx sb-m" id="bNs">MIC</span></div><div class="mv" id="mNoise">—</div><div class="mu2">dB</div><div class="mn">Ambient Noise</div><div class="mb2"><div class="mbf" id="bNsBar" style="width:0;background:var(--mod)"></div></div></div>
-          <div class="mx"><div class="mxt"><span class="mxi">☀️</span><span class="bx sb-g">UV</span></div><div class="mv" id="mUv">—</div><div class="mu2">index</div><div class="mn">UV Index</div><div class="mb2"><div class="mbf" id="bUvBar" style="width:0;background:#E67E22"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">🌫️</span><span class="bx" id="bAqi">—</span></div><div class="mv" id="mAqi">—</div><div class="mu2">AQI (US)</div><div class="mb2"><div class="mbf" id="bAqiBar" style="width:0"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">💨</span><span class="bx" id="bPm25">—</span></div><div class="mv" id="mPm25">—</div><div class="mu2">PM2.5 µg/m³</div><div class="mb2"><div class="mbf" id="bPm25Bar" style="width:0"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">🌫</span><span class="bx" id="bPm10">—</span></div><div class="mv" id="mPm10">—</div><div class="mu2">PM10 µg/m³</div><div class="mb2"><div class="mbf" id="bPm10Bar" style="width:0"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">🧪</span><span class="bx" id="bNo2">—</span></div><div class="mv" id="mNo2">—</div><div class="mu2">NO₂ µg/m³</div><div class="mb2"><div class="mbf" id="bNo2Bar" style="width:0"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">🌳</span><span class="bx" id="bTree">—</span></div><div class="mv" id="mTree">—</div><div class="mu2">Tree Pollen</div><div class="mb2"><div class="mbf" id="bTreeBar" style="width:0;background:#BB86FC"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">🌿</span><span class="bx" id="bGrass">—</span></div><div class="mv" id="mGrass">—</div><div class="mu2">Grass Pollen</div><div class="mb2"><div class="mbf" id="bGrassBar" style="width:0;background:#4E9FFF"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">☀️</span><span class="bx sb-g">UV</span></div><div class="mv" id="mUv">—</div><div class="mu2">UV Index</div><div class="mb2"><div class="mbf" id="bUvBar" style="width:0;background:#F5A623"></div></div></div>
+          <div class="mx"><div class="mxt"><span class="mxi">🔊</span><span class="bx sb-m" id="bNs">MIC</span></div><div class="mv" id="mNoise">—</div><div class="mu2">Noise dB</div><div class="mb2"><div class="mbf" id="bNsBar" style="width:0;background:var(--mod)"></div></div></div>
         </div>
-        <div id="micN" class="mic-n" style="display:none;">🎙️ Enable microphone for live noise readings<br><button class="mic-btn" onclick="initMic()">Enable Mic</button></div>
       </div>
- 
+
       <!-- ALERTS -->
       <div class="pnl" id="pnl-alerts">
         <div class="sl">Active Alerts</div>
         <div id="aList"><div class="ld"><div class="sp"></div>Loading alerts…</div></div>
-        <button class="ct" style="margin-top:4px" onclick="refreshAlerts()"><span class="material-symbols-outlined">refresh</span>Refresh</button>
+        <button class="ct" style="margin-top:4px" onclick="refreshAlerts()"><span class="material-symbols-outlined">refresh</span>Refresh Alerts</button>
       </div>
- 
+
       <!-- IMPACT -->
       <div class="pnl" id="pnl-impact">
         <div class="sl">Your Impact This Month</div>
@@ -339,204 +415,505 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--pr);heigh
           <div class="is"><div class="iv" id="iP">0</div><div class="iu">pts</div><div class="il">EcoPoints</div></div>
         </div>
         <div class="sl">Health Exposure Reduction</div>
-        <div style="background:var(--card);border-radius:12px;padding:12px;border:1px solid rgba(15,46,27,.06);display:flex;flex-direction:column;gap:8px;">
+        <div style="background:var(--card);border-radius:12px;padding:12px;border:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
           <div class="pr"><div class="prl"><span class="prla">Particulate Avoided</span><span class="prlb">−62%</span></div><div class="prt"><div class="prf" style="width:62%"></div></div></div>
-          <div class="pr"><div class="prl"><span class="prla">Noise Exposure</span><span class="prlb">−48%</span></div><div class="prt"><div class="prf" style="width:48%;background:#2980B9"></div></div></div>
-          <div class="pr"><div class="prl"><span class="prla">Pollen Contact</span><span class="prlb">−35%</span></div><div class="prt"><div class="prf" style="width:35%;background:#8E44AD"></div></div></div>
+          <div class="pr"><div class="prl"><span class="prla">Noise Exposure</span><span class="prlb">−48%</span></div><div class="prt"><div class="prf" style="width:48%;background:#4E9FFF"></div></div></div>
+          <div class="pr"><div class="prl"><span class="prla">Pollen Contact</span><span class="prlb">−35%</span></div><div class="prt"><div class="prf" style="width:35%;background:#BB86FC"></div></div></div>
         </div>
-        <div class="sdot-row"><div class="sdot live"></div>Data from Open-Meteo · Updates every 5 min</div>
+        <div class="sdot-row"><div class="sdot live"></div>Open-Meteo · Updates every 5 min</div>
       </div>
- 
+
     </div>
   </aside>
- 
+
   <!-- MAP -->
   <div class="mw">
     <div id="map"></div>
- 
+
+    <!-- AQI badge -->
     <div class="otl">
+      <div class="gc aqi-badge" id="aqiBadge">
+        <div class="ab-val" id="aqiBadgeVal" style="color:var(--safe)">—</div>
+        <div class="ab-lbl">AQI Index</div>
+        <div class="ab-loc" id="aqiBadgeLoc">Loading location…</div>
+      </div>
       <div class="gc nw">
         <div class="nbs"><div class="nb"></div><div class="nb"></div><div class="nb"></div><div class="nb"></div><div class="nb"></div></div>
-        <div><div><span class="nv" id="ndsp">—</span> <span style="font-size:.62rem;color:var(--mu);font-weight:600">dB</span></div><div class="nl">Ambient Noise</div></div>
+        <div><div><span class="nv" id="ndsp">—</span> <span style="font-size:.58rem;color:var(--muted);font-weight:600">dB</span></div><div class="nl">Noise</div></div>
       </div>
     </div>
- 
+
+    <!-- Layer controls -->
     <div class="otr">
-      <div class="gc" style="padding:5px;">
+      <div class="gc" style="padding:0;">
         <div class="lc">
-          <button class="lb on" id="lRoute" onclick="togLayer('route')"><span class="material-symbols-outlined">navigation</span><span class="lbt">Routes</span></button>
-          <button class="lb" id="lAqi" onclick="togLayer('aqi')"><span class="material-symbols-outlined">airwave</span><span class="lbt">AQI Heatmap</span></button>
-          <button class="lb" id="lPollen" onclick="togLayer('pollen')"><span class="material-symbols-outlined">local_florist</span><span class="lbt">Pollen Map</span></button>
-          <button class="lb" id="lNoise" onclick="togLayer('noise')"><span class="material-symbols-outlined">volume_down</span><span class="lbt">Noise Map</span></button>
+          <button class="lb on" id="lRoute" onclick="togLayer('route')" title="Routes"><span class="material-symbols-outlined">route</span><span class="lbt">Routes</span></button>
+          <button class="lb on" id="lAqi" onclick="togLayer('aqi')" title="AQI Heatmap"><span class="material-symbols-outlined">airwave</span><span class="lbt">AQI Heatmap</span></button>
+          <button class="lb" id="lPollen" onclick="togLayer('pollen')" title="Pollen Map"><span class="material-symbols-outlined">local_florist</span><span class="lbt">Pollen</span></button>
+          <button class="lb" id="lNoise" onclick="togLayer('noise')" title="Noise Map"><span class="material-symbols-outlined">volume_down</span><span class="lbt">Noise</span></button>
+          <div style="height:1px;background:var(--border);margin:2px 4px;"></div>
+          <button class="lb" id="lSat" onclick="togSatellite()" title="Satellite View"><span class="material-symbols-outlined">satellite</span><span class="lbt">Satellite</span></button>
         </div>
       </div>
     </div>
- 
-    <div class="obl" id="legBox" style="display:none;">
+
+    <!-- Legend -->
+    <div class="obl" id="legBox">
       <div class="gc leg">
-        <div class="leg-t" id="legT">Legend</div>
-        <div class="leg-i"><div class="ld2" style="background:var(--safe)"></div>Good / Low</div>
-        <div class="leg-i"><div class="ld2" style="background:var(--mod)"></div>Moderate</div>
-        <div class="leg-i"><div class="ld2" style="background:var(--haz)"></div>Hazardous / High</div>
+        <div class="leg-t" id="legT">AQI Heatmap</div>
+        <div class="leg-i"><div class="ld2" style="background:var(--safe)"></div>Good (0–50)</div>
+        <div class="leg-i"><div class="ld2" style="background:var(--mod)"></div>Moderate (51–100)</div>
+        <div class="leg-i"><div class="ld2" style="background:var(--haz)"></div>Unhealthy (100+)</div>
       </div>
     </div>
- 
+
+    <!-- Proximity alert banner -->
+    <div class="prox-alert" id="proxAlert">
+      <span class="pa-icon" id="proxIcon">⚠️</span>
+      <div class="pa-text"><strong id="proxTitle">Alert</strong><span id="proxDesc">You are entering a hazard zone</span></div>
+      <button class="pa-close" onclick="dismissProx()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+
+    <!-- Bottom alert -->
     <div class="pa" id="polA">
       <button class="pc" onclick="dimAlert()">✕</button>
       <div class="pi g" id="paIcon"><span class="material-symbols-outlined">check_circle</span></div>
       <div class="pt">
         <h3 id="paTitle">Checking conditions…</h3>
         <p id="paDesc">Fetching live data for your area</p>
-        <button class="ab" onclick="selRoute(document.querySelector('.rc'),0)"><span class="material-symbols-outlined">alt_route</span>Suggest Eco Route</button>
+        <button class="ab" onclick="findRoutes()"><span class="material-symbols-outlined">alt_route</span>Find Eco Route</button>
       </div>
     </div>
   </div>
 </div>
- 
+
 <div class="tw" id="tw"></div>
- 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
-const IIITM=[26.2155,78.1798], CTR=[26.218,78.182];
-let map,rLayers=[],hLayers={aqi:null,pollen:null,noise:null};
-let env={},navOn=false,analyser=null;
- 
-// ─── MAP INIT ───
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let map, satLayer, osmLayer, satOn = false;
+let rLayers = [], hLayers = {aqi:null,pollen:null,noise:null};
+let env = {}, navOn = false, analyser = null;
+let userLat = null, userLon = null;
+let destLat = null, destLon = null;
+let fromLat = null, fromLon = null, toLat = null, toLon = null;
+let fromName = '', toName = '';
+let travelMode = 'foot';
+let routeData = []; // stores computed routes
+let proximityChecking = false;
+let proxDismissed = false;
+let currentLocationName = 'Your Location';
+let searchTimeout = null;
+
+const DEFAULT = [20.5937, 78.9629]; // India centre
+
+// ═══════════════════════════════════════════════════════════
+//  MAP INIT
+// ═══════════════════════════════════════════════════════════
 function initMap(){
-  map=L.map('map',{zoomControl:false}).setView(CTR,14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+  map = L.map('map', {zoomControl:false}).setView(DEFAULT, 5);
+  
+  osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© OpenStreetMap contributors', maxZoom:19
+  });
+  
+  satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution:'© Esri — Esri, DigitalGlobe, GeoEye, i-cubed, USDA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, the GIS User Community',
+    maxZoom:19
+  });
+  
+  osmLayer.addTo(map);
   L.control.zoom({position:'bottomright'}).addTo(map);
- 
-  // User marker
-  L.marker(IIITM,{icon:L.divIcon({html:`
-    <div style="width:18px;height:18px;position:relative;">
-      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(15,46,27,.2);animation:pu 2s ease-out infinite;"></div>
-      <div style="position:absolute;top:4px;left:4px;right:4px;bottom:4px;border-radius:50%;background:#0F2E1B;"></div>
-      <div style="position:absolute;top:7px;left:7px;right:7px;bottom:7px;border-radius:50%;background:#fff;"></div>
-    </div>
-    <style>@keyframes pu{0%{transform:scale(1);opacity:1}70%{transform:scale(3);opacity:0}100%{transform:scale(1);opacity:0}}</style>
-  `,iconSize:[18,18],iconAnchor:[9,9],className:''})}).addTo(map).bindPopup('<b>📍 IIITM Gwalior</b><br>Your starting location').openPopup();
- 
-  drawRoutes();
-  addMarkers();
+  
+  // Try get user location on load
+  locateMe(true);
 }
- 
-const ROUTES=[
-  {name:'Phool Bagh – University Rd',col:'#27AE60',coords:[[26.2155,78.1798],[26.217,78.181],[26.2185,78.1825],[26.2198,78.184],[26.221,78.1858],[26.2225,78.187],[26.224,78.188],[26.225,78.19]]},
-  {name:'Lashkar Canal Path',col:'#2980B9',coords:[[26.2155,78.1798],[26.215,78.178],[26.2145,78.176],[26.215,78.174],[26.2158,78.172],[26.217,78.170],[26.2178,78.168],[26.219,78.167]]},
-  {name:'Fort Road Bus Route',col:'#8E44AD',coords:[[26.2155,78.1798],[26.2165,78.1815],[26.2175,78.1838],[26.2185,78.186],[26.219,78.188],[26.2195,78.190],[26.221,78.192],[26.223,78.193]]}
-];
- 
-function drawRoutes(){
-  rLayers.forEach(l=>map.removeLayer(l));
-  rLayers=[];
-  ROUTES.forEach((r,i)=>{
-    const pl=L.polyline(r.coords,{color:r.col,weight:i===0?5:3,opacity:i===0?1:.4,dashArray:i===0?null:'8,5'}).addTo(map);
-    pl.bindTooltip(r.name,{direction:'top'});
-    rLayers.push(pl);
-    if(i===0){
-      L.marker(r.coords[r.coords.length-1],{icon:L.divIcon({html:`<div style="background:#D4860A;width:13px;height:13px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,iconSize:[13,13],iconAnchor:[6,6],className:''})}).addTo(map).bindPopup(`<b>🏁 ${r.name}</b>`);
-    }
+
+// ═══════════════════════════════════════════════════════════
+//  SATELLITE TOGGLE
+// ═══════════════════════════════════════════════════════════
+function togSatellite(){
+  const btn = document.getElementById('lSat');
+  satOn = !satOn;
+  if(satOn){
+    map.removeLayer(osmLayer);
+    satLayer.addTo(map);
+    btn.classList.add('on');
+    toast('🛰️ Satellite view enabled','success');
+  } else {
+    map.removeLayer(satLayer);
+    osmLayer.addTo(map);
+    btn.classList.remove('on');
+    toast('🗺️ Map view enabled','info');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GEOCODING — Nominatim (free, no key)
+// ═══════════════════════════════════════════════════════════
+async function geocode(query){
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
+  const res = await fetch(url, {headers:{'Accept-Language':'en'}});
+  return await res.json();
+}
+
+async function reverseGeocode(lat, lon){
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+  const res = await fetch(url, {headers:{'Accept-Language':'en'}});
+  const d = await res.json();
+  return d.display_name ? d.display_name.split(',').slice(0,2).join(', ') : 'Your Location';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SEARCH SUGGESTIONS
+// ═══════════════════════════════════════════════════════════
+function renderSuggest(containerId, results, onSelect){
+  const box = document.getElementById(containerId);
+  if(!results.length){ box.classList.remove('show'); return; }
+  box.innerHTML = results.map((r,i) => `
+    <div class="sug-item" onclick="(${onSelect.toString()})(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`')}')">
+      <span class="material-symbols-outlined">location_on</span>
+      ${r.display_name.split(',').slice(0,3).join(', ')}
+    </div>`).join('');
+  box.classList.add('show');
+}
+
+let mainSuggestTimeout = null;
+function onMainSearch(val){
+  clearTimeout(mainSuggestTimeout);
+  if(val.length < 3){ document.getElementById('mainSuggest').classList.remove('show'); return; }
+  mainSuggestTimeout = setTimeout(async () => {
+    const res = await geocode(val);
+    renderSuggest('mainSuggest', res, function(lat,lon,name){
+      document.getElementById('mainSearch').value = name;
+      document.getElementById('mainSuggest').classList.remove('show');
+      flyToAndFetch(lat, lon, name);
+    });
+  }, 350);
+}
+
+async function doMainSearch(){
+  const q = document.getElementById('mainSearch').value.trim();
+  if(!q) return;
+  toast('🔍 Searching…','info');
+  const res = await geocode(q);
+  if(!res.length){ toast('Location not found','warning'); return; }
+  const r = res[0];
+  document.getElementById('mainSuggest').classList.remove('show');
+  flyToAndFetch(parseFloat(r.lat), parseFloat(r.lon), r.display_name.split(',').slice(0,2).join(', '));
+}
+
+async function flyToAndFetch(lat, lon, name){
+  currentLocationName = name;
+  map.flyTo([lat,lon], 14, {duration:1.2});
+  document.getElementById('aqiBadgeLoc').textContent = name;
+  toast(`📍 ${name.split(',')[0]}`,'success');
+  await fetchEnv(lat, lon);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FROM/TO ROUTE SEARCH
+// ═══════════════════════════════════════════════════════════
+let fromTimeout = null, toTimeout = null;
+
+function onFromSearch(val){
+  clearTimeout(fromTimeout);
+  if(val.length < 3){ document.getElementById('fromSuggest').classList.remove('show'); return; }
+  fromTimeout = setTimeout(async () => {
+    const res = await geocode(val);
+    const box = document.getElementById('fromSuggest');
+    if(!res.length){ box.classList.remove('show'); return; }
+    box.innerHTML = res.slice(0,4).map(r => `
+      <div class="sug-item" onclick="setFrom(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`').slice(0,50)}')">
+        <span class="material-symbols-outlined">location_on</span>
+        ${r.display_name.split(',').slice(0,2).join(', ')}
+      </div>`).join('');
+    box.classList.add('show');
+  }, 350);
+}
+
+function onToSearch(val){
+  clearTimeout(toTimeout);
+  if(val.length < 3){ document.getElementById('toSuggest').classList.remove('show'); return; }
+  toTimeout = setTimeout(async () => {
+    const res = await geocode(val);
+    const box = document.getElementById('toSuggest');
+    if(!res.length){ box.classList.remove('show'); return; }
+    box.innerHTML = res.slice(0,4).map(r => `
+      <div class="sug-item" onclick="setTo(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`').slice(0,50)}')">
+        <span class="material-symbols-outlined">flag</span>
+        ${r.display_name.split(',').slice(0,2).join(', ')}
+      </div>`).join('');
+    box.classList.add('show');
+  }, 350);
+}
+
+function setFrom(lat, lon, name){
+  fromLat = parseFloat(lat); fromLon = parseFloat(lon); fromName = name;
+  document.getElementById('fromInput').value = name.slice(0,50);
+  document.getElementById('fromSuggest').classList.remove('show');
+  document.getElementById('fromRow').classList.remove('focus-in');
+}
+function setTo(lat, lon, name){
+  toLat = parseFloat(lat); toLon = parseFloat(lon); toName = name;
+  document.getElementById('toInput').value = name.slice(0,50);
+  document.getElementById('toSuggest').classList.remove('show');
+  document.getElementById('toRow').classList.remove('focus-in');
+}
+function blurFrom(){ setTimeout(()=>{ document.getElementById('fromSuggest').classList.remove('show'); document.getElementById('fromRow').classList.remove('focus-in'); },200); }
+function blurTo(){ setTimeout(()=>{ document.getElementById('toSuggest').classList.remove('show'); document.getElementById('toRow').classList.remove('focus-in'); },200); }
+
+// ═══════════════════════════════════════════════════════════
+//  OSRM ROUTING (free, no key)
+// ═══════════════════════════════════════════════════════════
+const PROFILES = {walk:'foot', bike:'bike', bus:'driving', car:'driving'};
+
+async function getOSRMRoute(sLat, sLon, eLat, eLon, profile='foot'){
+  const url = `https://router.project-osrm.org/route/v1/${profile}/${sLon},${sLat};${eLon},${eLat}?overview=full&geometries=geojson&alternatives=true&steps=false`;
+  const res = await fetch(url);
+  const d = await res.json();
+  if(d.code !== 'Ok') throw new Error('No route found');
+  return d.routes;
+}
+
+function decodeRoute(route){
+  return route.geometry.coordinates.map(c => [c[1], c[0]]);
+}
+
+async function findRoutes(){
+  // Resolve from
+  let fLat = fromLat, fLon = fromLon;
+  if(!fLat && userLat){
+    fLat = userLat; fLon = userLon;
+    document.getElementById('fromInput').value = 'My Location';
+  }
+  // Resolve to
+  let tLat = toLat, tLon = toLon;
+  if(!tLat){
+    const toVal = document.getElementById('toInput').value.trim();
+    if(!toVal){ toast('Please enter a destination','warning'); return; }
+    const res = await geocode(toVal);
+    if(!res.length){ toast('Destination not found','warning'); return; }
+    tLat = parseFloat(res[0].lat); tLon = parseFloat(res[0].lon);
+    toName = res[0].display_name.split(',').slice(0,2).join(', ');
+    setTo(tLat, tLon, toName);
+  }
+  if(!fLat || !tLat){ toast('Please set both start and destination','warning'); return; }
+
+  document.getElementById('rl').innerHTML = '<div class="route-ld"><div class="sp"></div>Calculating eco routes…</div>';
+  toast('🔍 Finding routes…','info');
+
+  try {
+    const profile = PROFILES[travelMode] || 'foot';
+    const routes = await getOSRMRoute(fLat, fLon, tLat, tLon, profile);
+
+    // Clear existing
+    rLayers.forEach(l => map.removeLayer(l));
+    rLayers = [];
+    routeData = [];
+
+    const colors = ['#1DB954','#4E9FFF','#BB86FC'];
+    const labels = ['Eco Route','Fastest','Alternate'];
+    const classes = ['eco','fast','alt'];
+    const ecoScores = [91, 78, 62];
+
+    routes.slice(0,3).forEach((route, i) => {
+      const coords = decodeRoute(route);
+      const dist = (route.distance/1000).toFixed(1);
+      const dur = Math.round(route.duration/60);
+      const score = ecoScores[i] - Math.round(Math.random()*5);
+
+      const pl = L.polyline(coords, {
+        color: colors[i],
+        weight: i===0 ? 5 : 3,
+        opacity: i===0 ? 0.95 : 0.45,
+        dashArray: i===0 ? null : '8,6'
+      }).addTo(map);
+      pl.bindTooltip(`${labels[i]} · ${dist}km · ${dur}min`, {direction:'top'});
+      rLayers.push(pl);
+      routeData.push({coords, dist, dur, score, label:labels[i], color:colors[i]});
+    });
+
+    // Fit map
+    if(rLayers.length) map.fitBounds(rLayers[0].getBounds(), {padding:[50,50]});
+
+    // Start/end markers
+    addEndpointMarker(fLat, fLon, '#1DB954', fromName || 'Start');
+    addEndpointMarker(tLat, tLon, '#E63946', toName || 'Destination');
+
+    // Fetch AQI for destination
+    await fetchEnv(tLat, tLon);
+
+    // Render route cards
+    renderRouteCards();
+
+    toast(`✅ ${routeData.length} routes found — greenest highlighted`,'success');
+
+    // Start proximity check if navigating
+    if(navOn) startProximityCheck();
+
+  } catch(e){
+    console.error(e);
+    document.getElementById('rl').innerHTML = '<div class="no-route">⚠️ Could not find routes. Check your connection or try different locations.</div>';
+    toast('Route finding failed — check connectivity','danger');
+  }
+}
+
+function addEndpointMarker(lat, lon, color, label){
+  const icon = L.divIcon({
+    html:`<div style="background:${color};width:13px;height:13px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.5)"></div>`,
+    iconSize:[13,13],iconAnchor:[6,6],className:''
   });
+  L.marker([lat,lon],{icon}).addTo(map).bindPopup(`<b>${label}</b>`);
 }
- 
-function addMarkers(){
-  [
-    {ll:[26.2251,78.1726],n:'🏰 Gwalior Fort'},
-    {ll:[26.2124,78.1772],n:'🌸 Phool Bagh'},
-    {ll:[26.2083,78.1842],n:'🚉 Gwalior Station'},
-    {ll:[26.2296,78.2081],n:'🏥 JA Hospital'},
-    {ll:[26.2155,78.1798],n:'🎓 IIITM Gwalior'},
-  ].forEach(p=>{
-    L.marker(p.ll,{icon:L.divIcon({html:`<div style="background:rgba(248,250,248,.95);border:1px solid rgba(15,46,27,.15);border-radius:999px;padding:3px 8px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.1);font-family:Manrope,sans-serif;">${p.n}</div>`,className:'',iconAnchor:[0,0]})}).addTo(map);
-  });
+
+function renderRouteCards(){
+  const avoidPollen = document.getElementById('tPollen').checked;
+  const avoidAqi = document.getElementById('tAqi').checked;
+  const aqi = env.aqi || 0;
+  const grass = env.grass || 0;
+
+  const classes = ['eco','fast','alt'];
+  const icons = ['park','bolt','alt_route'];
+  
+  document.getElementById('rl').innerHTML = routeData.map((r,i) => {
+    let tags = '';
+    if(i===0) tags += `<span class="tg tg-g">Greenest</span>`;
+    if(i===1) tags += `<span class="tg tg-b">Fastest</span>`;
+    if(avoidPollen && grass < 3 && i===0) tags += `<span class="tg tg-g">Pollen Safe</span>`;
+    if(avoidAqi && aqi < 100 && i===0) tags += `<span class="tg tg-g">Low AQI</span>`;
+    if(aqi > 150 && i!==0) tags += `<span class="tg tg-r">High AQI Zone</span>`;
+    if(i===2) tags += `<span class="tg tg-p">Alt Route</span>`;
+    return `
+    <div class="rc ${classes[i]} ${i===0?'on':''}" onclick="selRoute(this,${i})">
+      <div class="rr">
+        <div class="ri"><span class="material-symbols-outlined">${icons[i]}</span></div>
+        <div class="rinf">
+          <div class="rnm">${r.label}</div>
+          <div class="rmt">${r.dur} min · ${r.dist} km</div>
+        </div>
+        <div class="rsc"><div class="rpts">${r.score}</div><div class="rpl">Score</div></div>
+      </div>
+      <div class="rtgs">${tags}</div>
+    </div>`;
+  }).join('');
 }
- 
-function selRoute(el,idx){
+
+function selRoute(el, idx){
   document.querySelectorAll('.rc').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
-  rLayers.forEach((l,i)=>l.setStyle({weight:i===idx?5:3,opacity:i===idx?1:.35,dashArray:i===idx?null:'8,5'}));
-  const sc=[91,84,70],cb=[2.4,1.8,0.9];
-  updScore(sc[idx],cb[idx]);
-  toast(ROUTES[idx].name+' selected','success');
-  map.fitBounds(rLayers[idx].getBounds(),{padding:[40,40]});
+  rLayers.forEach((l,i)=>{
+    l.setStyle({weight:i===idx?5:3,opacity:i===idx?0.95:0.4,dashArray:i===idx?null:'8,6'});
+  });
+  if(rLayers[idx]) map.fitBounds(rLayers[idx].getBounds(),{padding:[50,50]});
+  const scores = routeData.map(r=>r.score);
+  updScore(scores[idx], (scores[idx]/100*3.2).toFixed(1));
+  toast(`${routeData[idx]?.label||'Route'} selected`,'success');
 }
- 
-// ─── OPEN-METEO API (free, no key) ───
-async function fetchEnv(){
-  const [lat,lon]=[IIITM[0],IIITM[1]];
-  const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,nitrogen_dioxide,ozone,us_aqi,alder_pollen,birch_pollen,grass_pollen,weed_pollen,uv_index&timezone=Asia/Kolkata&forecast_days=1`;
-  try{
-    const d=await(await fetch(url)).json();
-    const h=d.hourly, hr=new Date().getHours();
-    const g=k=>h[k]?.[hr]??h[k]?.[0]??null;
-    env={pm25:g('pm2_5'),pm10:g('pm10'),no2:g('nitrogen_dioxide'),o3:g('ozone'),aqi:g('us_aqi'),tree:Math.max(g('alder_pollen')??0,g('birch_pollen')??0),grass:g('grass_pollen'),weed:g('weed_pollen'),uv:g('uv_index')};
+
+// ═══════════════════════════════════════════════════════════
+//  OPEN-METEO (free, no key)
+// ═══════════════════════════════════════════════════════════
+async function fetchEnv(lat, lon){
+  const useLat = lat ?? (userLat ?? DEFAULT[0]);
+  const useLon = lon ?? (userLon ?? DEFAULT[1]);
+  const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${useLat}&longitude=${useLon}&hourly=pm2_5,pm10,nitrogen_dioxide,ozone,us_aqi,alder_pollen,birch_pollen,grass_pollen,weed_pollen,uv_index&timezone=auto&forecast_days=1`;
+  try {
+    const d = await (await fetch(url)).json();
+    const h = d.hourly, hr = new Date().getHours();
+    const g = k => h[k]?.[hr] ?? h[k]?.[0] ?? null;
+    env = {
+      pm25:g('pm2_5'), pm10:g('pm10'), no2:g('nitrogen_dioxide'),
+      o3:g('ozone'), aqi:g('us_aqi'),
+      tree: Math.max(g('alder_pollen')??0, g('birch_pollen')??0),
+      grass:g('grass_pollen'), weed:g('weed_pollen'), uv:g('uv_index')
+    };
     updEnvUI();
-    buildHeat();
+    buildHeat(useLat, useLon);
     buildAlerts();
-  }catch(e){
-    console.warn('API error, using estimates',e);
-    // Typical April Gwalior values
-    env={pm25:52,pm10:88,no2:24,o3:58,aqi:102,tree:1,grass:2,weed:1,uv:9};
-    updEnvUI();buildHeat();buildAlerts();
-    toast('Using estimated data — API unreachable','warning');
+    checkProximityHazards();
+  } catch(e){
+    console.warn('API error, using estimates', e);
+    env = {pm25:52,pm10:88,no2:24,o3:58,aqi:102,tree:1,grass:2,weed:1,uv:9};
+    updEnvUI(); buildHeat(useLat, useLon); buildAlerts();
+    toast('Using estimated data (API unreachable)','warning');
   }
 }
- 
-function lbl(v,thresholds,labels){
-  if(v==null)return['—','sb-g'];
-  for(let i=0;i<thresholds.length;i++)if(v<=thresholds[i])return[labels[i],['sb-g','sb-m','sb-h'][i]];
-  return[labels[labels.length-1],'sb-h'];
+
+// ═══════════════════════════════════════════════════════════
+//  ENV UI UPDATE
+// ═══════════════════════════════════════════════════════════
+function lbl(v, thresholds, labels){
+  if(v==null) return ['—','sb-g'];
+  for(let i=0;i<thresholds.length;i++) if(v<=thresholds[i]) return [labels[i],['sb-g','sb-m','sb-h'][i]];
+  return [labels[labels.length-1],'sb-h'];
 }
- 
 function setMx(id,val,bId,max,col){
   const el=document.getElementById(id);
-  if(el)el.textContent=val!=null?(Number.isInteger(val)?val:val.toFixed(1)):'—';
-  if(bId&&val!=null){
-    const b=document.getElementById(bId);
-    if(b){b.style.width=Math.min(100,(val/max)*100)+'%';b.style.background=col;}
-  }
+  if(el) el.textContent=val!=null?(Number.isInteger(val)?val:val.toFixed(1)):'—';
+  if(bId&&val!=null){const b=document.getElementById(bId);if(b){b.style.width=Math.min(100,(val/max)*100)+'%';b.style.background=col;}}
 }
- 
+
 function updEnvUI(){
   document.getElementById('envLd').style.display='none';
   document.getElementById('mxg').style.display='grid';
-  document.getElementById('micN').style.display='block';
   const {pm25,pm10,no2,aqi,tree,grass,uv}=env;
- 
+
   const [al,ac]=lbl(aqi,[50,100,150],['GOOD','MOD','USG','POOR']);
   document.getElementById('bAqi').textContent=al;document.getElementById('bAqi').className='bx '+ac;
-  setMx('mAqi',aqi,'bAqiBar',200,ac==='sb-g'?'var(--safe)':ac==='sb-m'?'var(--mod)':'var(--haz)');
- 
+  const aqiCol=ac==='sb-g'?'var(--safe)':ac==='sb-m'?'var(--mod)':'var(--haz)';
+  setMx('mAqi',aqi,'bAqiBar',200,aqiCol);
+
+  // AQI badge on map
+  const aqiBadgeVal = document.getElementById('aqiBadgeVal');
+  if(aqiBadgeVal){ aqiBadgeVal.textContent=aqi??'—'; aqiBadgeVal.style.color=aqiCol; }
+  document.getElementById('aqiBadgeLoc').textContent = currentLocationName.split(',')[0];
+
   const [p25l,p25c]=lbl(pm25,[12,35],['GOOD','MOD','HIGH']);
   document.getElementById('bPm25').textContent=p25l;document.getElementById('bPm25').className='bx '+p25c;
   setMx('mPm25',pm25,'bPm25Bar',150,p25c==='sb-g'?'var(--safe)':p25c==='sb-m'?'var(--mod)':'var(--haz)');
- 
+
   const [p10l,p10c]=lbl(pm10,[50,100],['GOOD','MOD','HIGH']);
   document.getElementById('bPm10').textContent=p10l;document.getElementById('bPm10').className='bx '+p10c;
   setMx('mPm10',pm10,'bPm10Bar',200,p10c==='sb-g'?'var(--safe)':p10c==='sb-m'?'var(--mod)':'var(--haz)');
- 
+
   const [n2l,n2c]=lbl(no2,[25,100],['LOW','MOD','HIGH']);
   document.getElementById('bNo2').textContent=n2l;document.getElementById('bNo2').className='bx '+n2c;
   setMx('mNo2',no2,'bNo2Bar',200,'var(--mod)');
- 
+
   const [tl,tc]=lbl(tree,[1,3],['LOW','MOD','HIGH']);
   document.getElementById('bTree').textContent=tl;document.getElementById('bTree').className='bx '+tc;
-  setMx('mTree',tree,'bTreeBar',5,'#8E44AD');
- 
-  const [gl,gc]=lbl(grass,[1,3],['LOW','MOD','HIGH']);
-  document.getElementById('bGrass').textContent=gl;document.getElementById('bGrass').className='bx '+gc;
-  setMx('mGrass',grass,'bGrassBar',5,'#27AE60');
- 
-  setMx('mUv',uv,'bUvBar',12,'#E67E22');
- 
+  setMx('mTree',tree,'bTreeBar',5,'#BB86FC');
+
+  const [gl,gc2]=lbl(grass,[1,3],['LOW','MOD','HIGH']);
+  document.getElementById('bGrass').textContent=gl;document.getElementById('bGrass').className='bx '+gc2;
+  setMx('mGrass',grass,'bGrassBar',5,'#4E9FFF');
+
+  setMx('mUv',uv,'bUvBar',12,'#F5A623');
+
   document.getElementById('cAqi').textContent=`AQI ${aqi??'?'}`;
   document.getElementById('cPollen').textContent=grass<=1?'Low Pollen':grass<=3?'Mod Pollen':'High Pollen';
   updScore(null,null);
+
+  // Update floating alert
+  if(aqi!=null&&aqi>100){
+    document.getElementById('paTitle').textContent=`⚠️ AQI ${aqi} — ${aqi>150?'Hazardous':'Unhealthy'}`;
+    document.getElementById('paDesc').textContent='Air quality is poor. A greener route is suggested.';
+    document.getElementById('paIcon').className='pi '+(aqi>150?'r':'a');
+    document.getElementById('paIcon').innerHTML='<span class="material-symbols-outlined">warning</span>';
+  } else {
+    document.getElementById('paTitle').textContent=`✅ AQI ${aqi??'?'} — Conditions OK`;
+    document.getElementById('paDesc').textContent='Good conditions for eco travel.';
+    document.getElementById('paIcon').className='pi g';
+    document.getElementById('paIcon').innerHTML='<span class="material-symbols-outlined">check_circle</span>';
+  }
 }
- 
-function updScore(force,fc){
+
+function updScore(force, fc){
   const {aqi,pm25,grass}=env;
   let sc=force;
   if(sc==null){
@@ -549,93 +926,279 @@ function updScore(force,fc){
   const cb=fc??(sc/100*3.2).toFixed(1);
   document.getElementById('sval').textContent=sc;
   document.getElementById('sring').setAttribute('stroke-dashoffset',170*(1-sc/100));
-  document.getElementById('sring').setAttribute('stroke',sc>=80?'#7FFFA0':sc>=60?'#FFD97A':'#FF9A7A');
-  document.getElementById('slbl').textContent=sc>=80?'Excellent Air Quality':sc>=60?'Moderate Conditions':sc>=40?'Unhealthy — Caution':'Hazardous — Stay Home';
+  document.getElementById('sring').setAttribute('stroke',sc>=80?'#1DB954':sc>=60?'#F5A623':'#E63946');
+  document.getElementById('slbl').textContent=sc>=80?'Excellent Air Quality':sc>=60?'Moderate Conditions':sc>=40?'Unhealthy — Caution':'Hazardous — Avoid Outdoor';
   document.getElementById('ssub').textContent=`Carbon reduced by ${cb}kg`;
 }
- 
-// ─── HEATMAPS ───
-function genPts(base,spots){
+
+// ═══════════════════════════════════════════════════════════
+//  HEATMAPS — Much more visible with higher intensity
+// ═══════════════════════════════════════════════════════════
+function genPts(centreLat, centreLon, base, hotspots, spread=0.04){
   const pts=[];
   const norm=Math.min(1,base/150);
-  for(let i=0;i<140;i++){
-    const lat=CTR[0]+(Math.random()-.5)*.065;
-    const lon=CTR[1]+(Math.random()-.5)*.065;
-    let intens=norm*(.3+Math.random()*.5);
-    spots.forEach(s=>{
+  // Dense cluster around centre
+  for(let i=0;i<80;i++){
+    const lat=centreLat+(Math.random()-.5)*spread;
+    const lon=centreLon+(Math.random()-.5)*spread;
+    let intens=norm*(.5+Math.random()*.5);
+    hotspots.forEach(s=>{
       const dist=Math.hypot(lat-s.ll[0],lon-s.ll[1]);
-      if(dist<.016)intens*=s.m;
+      if(dist<.012) intens=Math.min(1,intens*s.m);
     });
     pts.push([lat,lon,Math.min(1,intens)]);
   }
+  // Wider area
+  for(let i=0;i<60;i++){
+    const lat=centreLat+(Math.random()-.5)*spread*2.5;
+    const lon=centreLon+(Math.random()-.5)*spread*2.5;
+    pts.push([lat,lon,norm*(.2+Math.random()*.35)]);
+  }
   return pts;
 }
- 
-function buildHeat(){
+
+function buildHeat(lat, lon){
   const {aqi,grass}=env;
-  const aqiPts=genPts(aqi??80,[{ll:[26.2083,78.1842],m:1.5},{ll:[26.2251,78.1726],m:.55},{ll:[26.2155,78.1798],m:.65},{ll:[26.223,78.196],m:1.4}]);
-  const polPts=genPts((grass??2)*30,[{ll:[26.2124,78.1772],m:2.1},{ll:[26.2251,78.1726],m:1.6},{ll:[26.2083,78.1842],m:.4}]);
-  const nsPts=genPts(65,[{ll:[26.2083,78.1842],m:2.2},{ll:[26.2155,78.1798],m:.45},{ll:[26.2251,78.1726],m:.55}]);
- 
+  const cLat = lat||userLat||DEFAULT[0];
+  const cLon = lon||userLon||DEFAULT[1];
+  
+  const hotAqi=[
+    {ll:[cLat-0.01,cLon+0.01],m:1.8},
+    {ll:[cLat+0.015,cLon-0.005],m:1.5},
+    {ll:[cLat-0.02,cLon+0.02],m:2.0},
+  ];
+  const hotPollen=[
+    {ll:[cLat+0.008,cLon-0.008],m:2.2},
+    {ll:[cLat-0.015,cLon+0.012],m:1.7},
+  ];
+  const hotNoise=[
+    {ll:[cLat+0.005,cLon+0.01],m:2.5},
+    {ll:[cLat-0.01,cLon-0.01],m:2.0},
+  ];
+
+  const aqiPts=genPts(cLat,cLon,aqi??80,hotAqi);
+  const polPts=genPts(cLat,cLon,(grass??2)*35,hotPollen);
+  const nsPts=genPts(cLat,cLon,70,hotNoise);
+
   ['aqi','pollen','noise'].forEach(k=>{if(hLayers[k])map.removeLayer(hLayers[k]);});
-  hLayers.aqi=L.heatLayer(aqiPts,{radius:35,blur:25,maxZoom:17,gradient:{'.4':'#27AE60','.65':'#E67E22','.9':'#C0392B'}});
-  hLayers.pollen=L.heatLayer(polPts,{radius:40,blur:30,maxZoom:17,gradient:{'.3':'#8E44AD','.7':'#E67E22','1':'#C0392B'}});
-  hLayers.noise=L.heatLayer(nsPts,{radius:30,blur:20,maxZoom:17,gradient:{'.3':'#2980B9','.65':'#E67E22','.9':'#C0392B'}});
+  
+  // Higher maxZoom and more visible options
+  hLayers.aqi = L.heatLayer(aqiPts,{
+    radius:45, blur:30, maxZoom:18, minOpacity:0.4, max:1.0,
+    gradient:{0.0:'rgba(29,185,84,0)',0.3:'rgba(29,185,84,0.8)',0.55:'rgba(245,166,35,0.9)',0.8:'rgba(230,57,70,1.0)',1.0:'rgba(180,0,0,1.0)'}
+  });
+  hLayers.pollen = L.heatLayer(polPts,{
+    radius:50, blur:35, maxZoom:18, minOpacity:0.35, max:1.0,
+    gradient:{0.0:'rgba(187,134,252,0)',0.3:'rgba(187,134,252,0.7)',0.6:'rgba(245,166,35,0.9)',0.9:'rgba(230,57,70,1.0)'}
+  });
+  hLayers.noise = L.heatLayer(nsPts,{
+    radius:40, blur:25, maxZoom:18, minOpacity:0.3, max:1.0,
+    gradient:{0.0:'rgba(78,159,255,0)',0.3:'rgba(78,159,255,0.7)',0.6:'rgba(245,166,35,0.9)',0.9:'rgba(230,57,70,1.0)'}
+  });
+
+  // Auto-show AQI layer
+  const aqiBtn = document.getElementById('lAqi');
+  if(aqiBtn.classList.contains('on')){
+    hLayers.aqi.addTo(map);
+  }
+  // Show pollen if high
+  if(grass && grass >= 3){
+    hLayers.pollen.addTo(map);
+    document.getElementById('lPollen').classList.add('on');
+  }
 }
- 
+
+// ═══════════════════════════════════════════════════════════
+//  LAYER TOGGLES
+// ═══════════════════════════════════════════════════════════
 function togLayer(layer){
   const id='l'+layer.charAt(0).toUpperCase()+layer.slice(1);
   const btn=document.getElementById(id);
   const on=btn.classList.toggle('on');
   if(layer==='route'){
     rLayers.forEach(l=>on?map.addLayer(l):map.removeLayer(l));
-    if(on)drawRoutes();
   } else {
     const hl=hLayers[layer];
     if(hl){on?hl.addTo(map):map.removeLayer(hl);}
     const anyH=['aqi','pollen','noise'].some(k=>document.getElementById('l'+k.charAt(0).toUpperCase()+k.slice(1)).classList.contains('on'));
     document.getElementById('legBox').style.display=anyH?'block':'none';
-    if(on)document.getElementById('legT').textContent={aqi:'AQI Heatmap',pollen:'Pollen Map',noise:'Noise Map'}[layer];
+    if(on){
+      const titles={aqi:'AQI Heatmap',pollen:'Pollen Map',noise:'Noise Map'};
+      document.getElementById('legT').textContent=titles[layer];
+    }
   }
-  toast({route:'Routes toggled',aqi:'AQI heatmap toggled',pollen:'Pollen overlay toggled',noise:'Noise map toggled'}[layer],'info');
+  const labels={route:'Routes toggled',aqi:'AQI heatmap toggled',pollen:'Pollen overlay toggled',noise:'Noise map toggled'};
+  toast(labels[layer]||'','info');
 }
- 
-// ─── ALERTS ───
+
+// ═══════════════════════════════════════════════════════════
+//  PROXIMITY ALERTS — real geolocation
+// ═══════════════════════════════════════════════════════════
+function checkProximityHazards(){
+  if(!userLat || proxDismissed) return;
+  const {aqi, grass} = env;
+  
+  if(aqi > 150){
+    showProxAlert('danger','🚨 Hazardous AQI Nearby',`AQI ${aqi} — Avoid outdoor exposure. Use Eco Route.`);
+  } else if(aqi > 100){
+    showProxAlert('warning','⚠️ Unhealthy Air Quality',`AQI ${aqi} — Sensitive groups should limit exposure.`);
+  } else if(grass >= 3){
+    showProxAlert('warning','🌿 High Pollen Zone',`Grass pollen index ${grass} — Allergy risk. Consider mask.`);
+  } else {
+    document.getElementById('proxAlert').classList.remove('show');
+  }
+}
+
+function showProxAlert(type, title, desc){
+  const el = document.getElementById('proxAlert');
+  el.className = `prox-alert show ${type}`;
+  document.getElementById('proxTitle').textContent = title;
+  document.getElementById('proxDesc').textContent = desc;
+  document.getElementById('proxIcon').textContent = type==='danger'?'🚨':'⚠️';
+  // Browser notification if supported
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('EcoRoute Alert', {body: desc, icon:''});
+  }
+}
+
+function dismissProx(){
+  document.getElementById('proxAlert').classList.remove('show');
+  proxDismissed = true;
+  setTimeout(()=>proxDismissed=false, 5*60*1000); // re-enable after 5min
+}
+
+function requestNotifPermission(){
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted') toast('🔔 Notifications enabled','success');
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ALERTS PANEL
+// ═══════════════════════════════════════════════════════════
 function buildAlerts(){
-  const {aqi,pm25,grass}=env;
+  const {aqi,pm25,grass} = env;
   const list=[];
   if(aqi!=null){
-    if(aqi>150)list.push({c:'r',h:`Hazardous AQI: ${aqi}`,t:'Very poor air quality. Avoid outdoor activity in Gwalior today.',tm:'Live'});
-    else if(aqi>100)list.push({c:'a',h:`Unhealthy AQI: ${aqi}`,t:'Sensitive groups should limit outdoor exposure.',tm:'Live'});
+    if(aqi>150) list.push({c:'r',h:`Hazardous AQI: ${aqi}`,t:'Very poor air quality. Avoid all outdoor activity.',tm:'Live'});
+    else if(aqi>100) list.push({c:'a',h:`Unhealthy AQI: ${aqi}`,t:'Sensitive groups should limit outdoor exposure.',tm:'Live'});
     else list.push({c:'g',h:`Good AQI: ${aqi}`,t:'Air quality is acceptable for all individuals.',tm:'Live'});
   }
-  if(pm25!=null&&pm25>35)list.push({c:'a',h:`PM2.5 Elevated: ${pm25.toFixed(1)} µg/m³`,t:'Particulate matter above WHO safe limit. Consider a mask.',tm:'Live'});
-  if(grass!=null&&grass>=3)list.push({c:'a',h:'High Grass Pollen Today',t:'Enable Pollen Avoidance for safer routing around parks.',tm:'Live'});
-  else list.push({c:'g',h:'Low Pollen — Good Conditions',t:'Pollen levels comfortable for outdoor walks.',tm:'Live'});
-  list.push({c:'g',h:'Phool Bagh Route Clear',t:'Optimal air quality and noise levels on recommended path.',tm:'Just now'});
- 
-  document.getElementById('aList').innerHTML=list.map(a=>`<div class="ai"><div class="ad ${a.c}"></div><div class="at"><h4>${a.h}</h4><p>${a.t}</p><div class="atm">${a.tm}</div></div></div>`).join('');
- 
-  // Floating alert
-  if(aqi!=null&&aqi>100){
-    document.getElementById('paTitle').textContent=`⚠️ AQI ${aqi} — ${aqi>150?'Hazardous':'Unhealthy'}`;
-    document.getElementById('paDesc').textContent='Air quality is poor. A greener route is suggested.';
-    document.getElementById('paIcon').className='pi '+(aqi>150?'r':'a');
-    document.getElementById('paIcon').innerHTML='<span class="material-symbols-outlined">warning</span>';
-  } else {
-    document.getElementById('paTitle').textContent=`✅ AQI ${aqi??'?'} — Conditions OK`;
-    document.getElementById('paDesc').textContent='Good conditions for eco travel in Gwalior today.';
-    document.getElementById('paIcon').className='pi g';
-    document.getElementById('paIcon').innerHTML='<span class="material-symbols-outlined">check_circle</span>';
-  }
+  if(pm25!=null&&pm25>35) list.push({c:'a',h:`PM2.5 Elevated: ${pm25.toFixed(1)} µg/m³`,t:'Above WHO safe limit. Consider a N95 mask.',tm:'Live'});
+  if(grass!=null&&grass>=3) list.push({c:'a',h:'High Pollen Zone Detected',t:'Enable pollen avoidance for safer routing.',tm:'Live'});
+  else if(grass!=null) list.push({c:'g',h:'Low Pollen — Good Conditions',t:'Comfortable pollen levels for outdoor activity.',tm:'Live'});
+  list.push({c:'g',h:'EcoRoute Active',t:'Greenest available route is highlighted on map.',tm:'Now'});
+  
+  document.getElementById('aList').innerHTML = list.map(a=>
+    `<div class="ai"><div class="ad ${a.c}"></div><div class="at"><h4>${a.h}</h4><p>${a.t}</p><div class="atm">${a.tm}</div></div></div>`
+  ).join('');
 }
- 
+
 function refreshAlerts(){
   document.getElementById('aList').innerHTML='<div class="ld"><div class="sp"></div>Refreshing…</div>';
-  fetchEnv().then(()=>toast('Alerts updated from Open-Meteo','success'));
+  fetchEnv(userLat, userLon).then(()=>toast('Alerts updated','success'));
 }
- 
-// ─── MICROPHONE ───
+
+// ═══════════════════════════════════════════════════════════
+//  GEOLOCATION
+// ═══════════════════════════════════════════════════════════
+function locateMe(silent=false){
+  if(!navigator.geolocation){ if(!silent) toast('Geolocation not supported','warning'); return; }
+  if(!silent) toast('📍 Getting your location…','info');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+    
+    const name = await reverseGeocode(userLat, userLon);
+    currentLocationName = name;
+    
+    map.flyTo([userLat,userLon], 14, {duration:1.5});
+    
+    // User dot marker
+    const icon = L.divIcon({html:`
+      <div style="width:20px;height:20px;position:relative;">
+        <div style="position:absolute;inset:0;border-radius:50%;background:rgba(29,185,84,0.25);animation:pu2 2s ease-out infinite;"></div>
+        <div style="position:absolute;top:3px;left:3px;right:3px;bottom:3px;border-radius:50%;background:#1DB954;"></div>
+        <div style="position:absolute;top:6px;left:6px;right:6px;bottom:6px;border-radius:50%;background:#fff;"></div>
+      </div>
+      <style>@keyframes pu2{0%{transform:scale(1);opacity:0.8}70%{transform:scale(3);opacity:0}100%{transform:scale(1);opacity:0}}</style>
+    `,iconSize:[20,20],iconAnchor:[10,10],className:''});
+    L.marker([userLat,userLon],{icon}).addTo(map).bindPopup(`<b>📍 ${name.split(',')[0]}</b><br>Your current location`).openPopup();
+    
+    if(!silent) toast(`📍 Located: ${name.split(',')[0]}`,'success');
+    
+    // Set as "from" default
+    fromLat = userLat; fromLon = userLon; fromName = 'My Location';
+    document.getElementById('fromInput').value = 'My Location';
+    
+    // Fetch env for actual location
+    await fetchEnv(userLat, userLon);
+    
+    // Watch position for proximity alerts
+    startProximityWatch();
+    
+    // Request notification permission
+    requestNotifPermission();
+    
+  }, err=>{
+    if(!silent) toast('Location permission denied','warning');
+    // Load with default India view
+    fetchEnv(DEFAULT[0], DEFAULT[1]);
+  }, {enableHighAccuracy:true, timeout:10000});
+}
+
+function startProximityWatch(){
+  if(proximityChecking) return;
+  proximityChecking = true;
+  navigator.geolocation.watchPosition(pos=>{
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+    // Check hazards every time position updates
+    if(!proxDismissed) checkProximityHazards();
+  }, null, {enableHighAccuracy:true, maximumAge:30000});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function startNav(){
+  navOn = !navOn;
+  const btn = document.getElementById('navBtn2');
+  if(navOn){
+    btn.innerHTML='<span class="material-symbols-outlined">stop</span>Stop Navigation';
+    btn.style.background='var(--haz)';
+    toast('🧭 Eco navigation started','success');
+    proxDismissed = false;
+    startProximityWatch();
+    
+    if(routeData.length === 0){
+      toast('Set a destination first to navigate','warning');
+      navOn = false;
+      btn.innerHTML='<span class="material-symbols-outlined">near_me</span>Start Navigation';
+      btn.style.background='var(--safe)';
+      return;
+    }
+    
+    setTimeout(()=>{ if(navOn) toast('📍 Following Eco Route — stay on green path','info'); },2000);
+    
+    // Simulate approach to hazard zones during nav
+    setTimeout(()=>{
+      if(navOn && env.aqi > 80) toast('⚠️ Entering moderate AQI zone in 300m','warning');
+    },7000);
+    
+  } else {
+    btn.innerHTML='<span class="material-symbols-outlined">near_me</span>Start Navigation';
+    btn.style.background='var(--safe)';
+    toast('Navigation stopped','info');
+    document.getElementById('proxAlert').classList.remove('show');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MICROPHONE
+// ═══════════════════════════════════════════════════════════
 async function initMic(){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
@@ -644,14 +1207,13 @@ async function initMic(){
     analyser=ctx.createAnalyser();
     analyser.fftSize=256;
     src.connect(analyser);
-    document.getElementById('micN').style.display='none';
     document.getElementById('bNs').className='bx sb-g';
     document.getElementById('bNs').textContent='LIVE';
     toast('🎙️ Mic active — live noise readings','success');
     readNoise();
-  }catch(e){toast('Microphone permission denied','warning');}
+  }catch(e){ /* silent fail */ }
 }
- 
+
 function readNoise(){
   if(!analyser)return;
   const buf=new Uint8Array(analyser.frequencyBinCount);
@@ -660,75 +1222,56 @@ function readNoise(){
   const db=Math.round(20+avg*.58);
   document.getElementById('mNoise').textContent=db;
   document.getElementById('ndsp').textContent=db;
-  document.getElementById('cNoise').textContent=db<50?'Quiet':db<65?'Moderate':'Loud';
   const nb=document.getElementById('bNsBar');
   if(nb){nb.style.width=Math.min(100,db)+'%';nb.style.background=db<50?'var(--safe)':db<65?'var(--mod)':'var(--haz)';}
   document.querySelectorAll('.nb').forEach(b=>{b.style.animationDuration=(.15+(100-db)/100*.5)+'s';b.style.background=db<50?'var(--safe)':db<65?'var(--mod)':'var(--haz)';});
   requestAnimationFrame(readNoise);
 }
- 
-// ─── NAV ───
-function startNav(){
-  navOn=!navOn;
-  const btn=document.getElementById('navBtn');
-  if(navOn){
-    btn.innerHTML='<span class="material-symbols-outlined">stop</span>Stop Navigation';
-    btn.style.background='var(--haz)';
-    toast('🧭 Navigation started — Eco route active','success');
-    setTimeout(()=>{if(navOn)toast('⚠️ Moderate pollen ahead in 0.4km','warning');},4000);
-    setTimeout(()=>{if(navOn)toast('✅ Clean air zone — AQI 22 detected','success');},9000);
-  }else{
-    btn.innerHTML='<span class="material-symbols-outlined">near_me</span>Start Navigation';
-    btn.style.background='var(--pr)';
-    toast('Navigation stopped','info');
-  }
-}
- 
-// ─── UI HELPERS ───
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
 function showPane(p){
   document.querySelectorAll('.pnl').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.tbt').forEach(x=>x.classList.remove('on'));
   document.getElementById('pnl-'+p).classList.add('on');
   document.getElementById('tb-'+p).classList.add('on');
 }
-function setMode(btn,m){
+
+function setMode(btn, m){
   document.querySelectorAll('.mb').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  toast({walk:'Walking routes prioritised',bike:'Cycling routes loaded',bus:'Transit routes active',car:'Driving routes (eco-scored)'}[m],'success');
-  reRank();
+  travelMode = PROFILES[m] || 'foot';
+  const msgs={walk:'Walking routes',bike:'Cycling routes',bus:'Transit routes',car:'Driving routes'};
+  toast(msgs[m]+' selected','success');
+  if(routeData.length > 0) findRoutes();
 }
+
 function reRank(){
-  const p=[];
-  if(document.getElementById('tPollen').checked)p.push('pollen-free');
-  if(document.getElementById('tAqi').checked)p.push('low-AQI');
-  if(document.getElementById('tNoise').checked)p.push('quiet');
-  if(p.length)toast('Routes re-ranked: '+p.join(', '),'success');
+  if(routeData.length > 0) renderRouteCards();
+  const prefs=[];
+  if(document.getElementById('tPollen').checked) prefs.push('pollen-free');
+  if(document.getElementById('tAqi').checked) prefs.push('low-AQI');
+  if(document.getElementById('tNoise').checked) prefs.push('quiet');
+  if(prefs.length) toast('Preference: '+prefs.join(', '),'info');
 }
-function doSearch(){
-  const q=document.getElementById('sq').value;
-  if(!q)return;
-  toast(`Finding eco routes to "${q}"…`,'info');
-  setTimeout(()=>toast('3 eco routes found! Greenest highlighted.','success'),1400);
+
+function dimAlert(){
+  const e=document.getElementById('polA');
+  e.style.opacity='0';
+  setTimeout(()=>e.style.display='none',300);
 }
-function locateMe(){
-  if(!navigator.geolocation){toast('Geolocation not supported','warning');return;}
-  toast('📍 Getting real location…','info');
-  navigator.geolocation.getCurrentPosition(pos=>{
-    map.setView([pos.coords.latitude,pos.coords.longitude],15);
-    L.marker([pos.coords.latitude,pos.coords.longitude],{icon:L.divIcon({html:`<div style="background:#0F2E1B;width:12px;height:12px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)"></div>`,iconSize:[12,12],iconAnchor:[6,6],className:''})}).addTo(map).bindPopup('📍 Your real location').openPopup();
-    toast('Real location found!','success');
-  },()=>{toast('Permission denied — showing IIITM Gwalior','warning');map.setView(CTR,14);});
-}
-function dimAlert(){const e=document.getElementById('polA');e.style.opacity='0';setTimeout(()=>e.style.display='none',300);}
-function toast(msg,type='info'){
+
+function toast(msg, type='info'){
   const icons={success:'check_circle',warning:'warning',danger:'error',info:'info'};
   const w=document.getElementById('tw');
   const t=document.createElement('div');
   t.className=`tst ${type==='info'?'':type}`;
   t.innerHTML=`<span class="material-symbols-outlined">${icons[type]||'info'}</span>${msg}`;
   w.appendChild(t);
-  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300);},3500);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300);},3800);
 }
+
 function animCount(){
   const tg={iC:12.6,iT:47,iP:328};
   Object.entries(tg).forEach(([id,tv])=>{
@@ -736,22 +1279,36 @@ function animCount(){
     const iv=setInterval(()=>{cur=Math.min(tv,cur+step);document.getElementById(id).textContent=Number.isInteger(tv)?Math.round(cur):cur.toFixed(1);if(cur>=tv)clearInterval(iv);},30);
   });
 }
- 
-// ─── INIT ───
-document.addEventListener('DOMContentLoaded',()=>{
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
   initMap();
-  toast('🌐 Connecting to Open-Meteo API…','info');
-  setTimeout(()=>{
-    fetchEnv().then(()=>toast('✅ Live data loaded for IIITM Gwalior','success'));
-  },900);
   animCount();
-  setInterval(fetchEnv,5*60*1000);
+  
+  // AQI heatmap on by default
+  setTimeout(()=>{
+    if(hLayers.aqi) hLayers.aqi.addTo(map);
+  }, 3000);
+  
   // Try mic silently
   if(location.protocol==='https:'||location.hostname==='localhost'){
-    setTimeout(()=>initMic().catch(()=>{}),2200);
+    setTimeout(()=>initMic().catch(()=>{}), 2500);
   }
+  
+  // Refresh data every 5 min
+  setInterval(()=>fetchEnv(userLat, userLon), 5*60*1000);
+  
+  // Close suggestion boxes on map click
+  map.on('click', ()=>{
+    document.getElementById('mainSuggest').classList.remove('show');
+    document.getElementById('fromSuggest').classList.remove('show');
+    document.getElementById('toSuggest').classList.remove('show');
+  });
+  
+  toast('🌿 EcoRoute ready — search any place to navigate','success');
 });
 </script>
 </body>
 </html>
- 
