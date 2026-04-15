@@ -624,6 +624,29 @@ body {
 .noise-val { font-size: .9rem; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; }
 .noise-unit { font-size: .52rem; color: var(--outline); font-weight: 600; }
 
+/* Satellite toggle */
+.satellite-btn {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 500;
+  background: rgba(237,248,255,0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: none; border-radius: var(--r-full);
+  padding: 5px 14px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: .62rem; font-weight: 700; letter-spacing: .04em;
+  cursor: pointer; display: flex; align-items: center; gap: 5px;
+  color: var(--on-surface-variant);
+  box-shadow: var(--shadow-lg);
+  transition: all .2s;
+}
+.satellite-btn .material-symbols-outlined { font-size: 15px; }
+.satellite-btn.active {
+  background: rgba(20,50,62,0.88);
+  color: #e0f4ff;
+}
+.satellite-btn.active .material-symbols-outlined { color: #86f898; }
+
 /* Layer controls */
 .layer-controls { display: flex; flex-direction: column; gap: 3px; padding: 5px; }
 .layer-btn {
@@ -1015,6 +1038,11 @@ body {
     </div>
   </div>
 
+  <!-- Satellite toggle (top center) -->
+  <button class="satellite-btn" id="satelliteBtn" onclick="toggleSatellite()">
+    <span class="material-symbols-outlined">satellite_alt</span>Satellite
+  </button>
+
   <!-- Layer controls (top right) -->
   <div class="map-tr">
     <div class="glass-card layer-controls">
@@ -1158,6 +1186,8 @@ let pinDropMode = false;
 let healthProfile = 'none';
 let conditions = new Set();
 let catFilter = 'all';
+let satelliteOn = false;
+let baseTileLayer = null;
 
 // ═══════════════════════════════════════
 // MAP INIT
@@ -1165,7 +1195,7 @@ let catFilter = 'all';
 function initMap(){
   // Use light CartoDB map to match the bright Living Atlas theme
   map = L.map('map', {zoomControl:false, attributionControl:false}).setView(DEFAULT, 16);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {maxZoom:19}).addTo(map);
+  baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {maxZoom:19}).addTo(map);
   L.control.zoom({position:'bottomright'}).addTo(map);
 
   // Try user location but default to campus
@@ -1507,49 +1537,113 @@ function updateHealthHint(){
 // ═══════════════════════════════════════
 // ENV / SENSOR DATA — WITH DATA SOURCE TOGGLE
 // ═══════════════════════════════════════
-async function fetchEnv(lat,lon){
-  if(dataSource === 'csv'){
-    // Use campus CSV data — fixed to Gwalior campus readings
-    env = {
-      pm25: 35.2,
-      pm10: 62.1,
-      aqi: AQI_CSV.avg,
+async function fetchEnvFromOpenMeteo(lat, lon){
+  // Primary: open-meteo air quality
+  const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,us_aqi,grass_pollen,alder_pollen,birch_pollen,weed_pollen,uv_index&timezone=auto&forecast_days=1`;
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 8000);
+  try {
+    const resp = await fetch(url, {signal: controller.signal});
+    clearTimeout(timeout);
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const d = await resp.json();
+    const h = d.hourly, hr = new Date().getHours();
+    const g = k => h[k]?.[hr] ?? h[k]?.[0] ?? null;
+    if(g('us_aqi') === null) throw new Error('No AQI data in response');
+    return {
+      pm25: g('pm2_5'), pm10: g('pm10'), aqi: g('us_aqi'),
       csvAqi: AQI_CSV.avg,
-      tree: 1,
-      grass: 2,
-      weed: 1,
-      uv: 7,
+      tree: Math.max(g('alder_pollen')??0, g('birch_pollen')??0),
+      grass: g('grass_pollen'), weed: g('weed_pollen'), uv: g('uv_index'),
+      noise: estimateNoiseForPath([[lat, lon]])
+    };
+  } catch(e) {
+    clearTimeout(timeout);
+    throw e;
+  }
+}
+
+async function fetchEnvFromOpenWeather(lat, lon){
+  // Fallback: open-meteo weather (no api key needed) — gets UV at least
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&current_weather=true&timezone=auto&forecast_days=1`;
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 6000);
+  try {
+    const resp = await fetch(url, {signal: controller.signal});
+    clearTimeout(timeout);
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const d = await resp.json();
+    const hr = new Date().getHours();
+    const uv = d.hourly?.uv_index?.[hr] ?? null;
+    // Return partial data — AQI estimated from weather context
+    return {
+      pm25: null, pm10: null, aqi: null, csvAqi: AQI_CSV.avg,
+      tree: null, grass: null, weed: null, uv,
+      noise: estimateNoiseForPath([[lat, lon]])
+    };
+  } catch(e) {
+    clearTimeout(timeout);
+    throw e;
+  }
+}
+
+async function fetchEnv(lat, lon){
+  if(dataSource === 'csv'){
+    // CSV mode: NEVER call any live API — use only campus data
+    env = {
+      pm25: 35.2, pm10: 62.1, aqi: AQI_CSV.avg, csvAqi: AQI_CSV.avg,
+      tree: 1, grass: 2, weed: 1, uv: 7,
       noise: estimateNoiseForPath([[CAMPUS_LAT, CAMPUS_LON]])
     };
     updEnvUI();
     buildHeat(CAMPUS_LAT, CAMPUS_LON);
     buildAlerts();
     updateHealthHint();
-    // Update badge to campus
     document.getElementById('aqiBadgeLoc').textContent = CAMPUS_NAME;
-  } else {
-    // Live API mode
-    const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,us_aqi,grass_pollen,alder_pollen,birch_pollen,weed_pollen,uv_index&timezone=auto&forecast_days=1`;
-    try{
-      const d=await(await fetch(url)).json();
-      const h=d.hourly, hr=new Date().getHours();
-      const g=k=>h[k]?.[hr]??h[k]?.[0]??null;
-      env={
-        pm25:g('pm2_5'), pm10:g('pm10'), aqi:g('us_aqi'),
-        csvAqi:AQI_CSV.avg,
-        tree:Math.max(g('alder_pollen')??0,g('birch_pollen')??0),
-        grass:g('grass_pollen'), weed:g('weed_pollen'), uv:g('uv_index'),
-        noise:estimateNoiseForPath([[lat,lon]])
-      };
+    return; // Early exit — no API calls at all
+  }
+
+  // ── LIVE API MODE ──
+  // Show loading state
+  document.getElementById('envLd').style.display = 'flex';
+  document.getElementById('mxg').style.display = 'none';
+
+  let success = false;
+  let retries = 2; // Try up to 3 times total
+
+  while(retries >= 0 && !success) {
+    try {
+      const data = await fetchEnvFromOpenMeteo(lat, lon);
+      env = data;
       updEnvUI();
-      buildHeat(lat,lon);
+      buildHeat(lat, lon);
       buildAlerts();
       updateHealthHint();
-    }catch(e){
-      // Fallback to CSV on API failure
-      env={pm25:35.2,pm10:62.1,aqi:AQI_CSV.avg,csvAqi:AQI_CSV.avg,tree:1,grass:2,weed:1,uv:7,noise:68};
-      updEnvUI();buildHeat(CAMPUS_LAT,CAMPUS_LON);buildAlerts();
-      toast('API unavailable — using Campus CSV data','warning');
+      success = true;
+    } catch(e) {
+      retries--;
+      if(retries >= 0){
+        // Wait briefly before retry
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+  }
+
+  if(!success){
+    // All retries failed — try secondary source
+    try {
+      const data = await fetchEnvFromOpenWeather(lat, lon);
+      env = {...data, aqi: AQI_CSV.avg}; // Use CSV AQI as estimate since primary failed
+      updEnvUI();
+      buildHeat(lat, lon);
+      buildAlerts();
+      updateHealthHint();
+      toast('⚠️ Primary API unavailable — showing partial live data', 'warning');
+    } catch(e2) {
+      // All sources failed — show CSV data but keep API mode active
+      env = {pm25:35.2,pm10:62.1,aqi:AQI_CSV.avg,csvAqi:AQI_CSV.avg,tree:1,grass:2,weed:1,uv:7,noise:68};
+      updEnvUI(); buildHeat(CAMPUS_LAT,CAMPUS_LON); buildAlerts();
+      toast('🌐 Live API unreachable for this location — showing cached data', 'warning');
     }
   }
 }
@@ -1782,6 +1876,37 @@ function togglePinMode(){
   document.getElementById('pinModeBar').classList.toggle('show',pinDropMode);
   document.getElementById('pinModeBtn').classList.toggle('active',pinDropMode);
   if(pinDropMode) toast('Click on the map to drop a pin');
+}
+
+// ═══════════════════════════════════════
+// SATELLITE TOGGLE
+// ═══════════════════════════════════════
+function toggleSatellite(){
+  satelliteOn = !satelliteOn;
+  const btn = document.getElementById('satelliteBtn');
+  if(satelliteOn){
+    // Remove street layer, add satellite
+    map.removeLayer(baseTileLayer);
+    baseTileLayer = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {maxZoom:19, attribution:'Esri'}
+    ).addTo(map);
+    // Send satellite layer to bottom so heatmaps show on top
+    baseTileLayer.bringToBack();
+    btn.classList.add('active');
+    btn.innerHTML = '<span class="material-symbols-outlined">map</span>Street Map';
+    toast('🛰️ Satellite view on','success');
+  } else {
+    map.removeLayer(baseTileLayer);
+    baseTileLayer = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      {maxZoom:19}
+    ).addTo(map);
+    baseTileLayer.bringToBack();
+    btn.classList.remove('active');
+    btn.innerHTML = '<span class="material-symbols-outlined">satellite_alt</span>Satellite';
+    toast('🗺️ Street map restored');
+  }
 }
 
 // ═══════════════════════════════════════
