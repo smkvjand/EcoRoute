@@ -156,15 +156,15 @@ To transform navigation systems into **health-aware intelligent platforms** that
 
 ## 👨‍💻 Contributors
 
-* SriMuraliKrishna
-* Sujay
+* SriMuraliKrishna(web design, project lead, structure design , map layers, route alogritm, System architecture,data collection)
+* Sujay(Report design, Presentation support maps api routes,data collection)
 * Ankita
 * Jaidev
 * Sarayu
 * Gaurav
 * Harshini
 * Mentored by: Dr. Anurag Srivatsav
-
+Submitted to Anurag Srivatsava Sir for Evaluation for Subject EES Semester 2 IIITM Gwalior.
 ---
 
 ## 📌 Note
